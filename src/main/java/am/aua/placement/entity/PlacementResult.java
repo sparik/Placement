@@ -7,7 +7,8 @@ import java.util.Map;
  */
 public class PlacementResult {
 
-    private Map<Module, Slot> placement;
+    private Map<Long, Slot> placement;
+
 
 
 }

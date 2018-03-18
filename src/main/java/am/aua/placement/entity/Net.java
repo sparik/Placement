@@ -1,31 +1,29 @@
 package am.aua.placement.entity;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by sparik on 2/11/18.
  */
 public class Net {
-    private Set<Module> modules;
+    private List<Long> modules;
 
-    public Net(Iterable<Module> modules) {
-        this.modules = new HashSet<>();
+    public Net(Iterable<Long> modules) {
+        this.modules = new ArrayList<>();
 
-        for (Module module : modules) {
+        for (Long module : modules) {
             this.modules.add(module);
         }
     }
 
-    public Net(Module ... modules) {
-        this.modules = new HashSet<>();
+    public Net(Long ... modules) {
+        this.modules = new ArrayList<>();
 
         Collections.addAll(this.modules, modules);
     }
 
-    public Set<Module> getModules() {
-        return new HashSet<>(modules);
+    public List<Long> getModules() {
+        return new ArrayList<>(modules);
     }
 
 }

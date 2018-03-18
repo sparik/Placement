@@ -1,6 +1,5 @@
 package am.aua.placement;
 
-import am.aua.placement.entity.Module;
 import am.aua.placement.entity.Net;
 import am.aua.placement.entity.PlacementResult;
 import am.aua.placement.entity.Slot;
@@ -15,7 +14,7 @@ public class PlacementSolver {
 
     }
 
-    public PlacementResult solve(Iterable<Module> modules, Iterable<Net> nets, Iterable<Slot> slots) {
+    public PlacementResult solve(int moduleCount, Iterable<Net> nets, Iterable<Slot> slots) {
         
     }
 }
