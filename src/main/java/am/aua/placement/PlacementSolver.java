@@ -2,19 +2,10 @@ package am.aua.placement;
 
 import am.aua.placement.entity.Net;
 import am.aua.placement.entity.PlacementResult;
-import am.aua.placement.entity.Slot;
 
 /**
- * Created by sparik on 2/11/18.
+ * Created by sparik on 3/18/18.
  */
-public class PlacementSolver {
-
-
-    public PlacementSolver() {
-
-    }
-
-    public PlacementResult solve(int moduleCount, Iterable<Net> nets, Iterable<Slot> slots) {
-        
-    }
+public interface PlacementSolver {
+    PlacementResult solve(Iterable<Long> modules, Iterable<Net> nets, int H, int W);
 }
