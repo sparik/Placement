@@ -20,7 +20,7 @@ public class KLPartitionSolver implements PartitionSolver {
 
     }
 
-    public Pair<Set<Long>, Set<Long>> partition(Collection<Long> modules, Iterable<Net> nets) {
+    public Pair<Set<Long>, Set<Long>> partition(Collection<Module> modules, Iterable<Net> nets) {
         return null;
     }
 }

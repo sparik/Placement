@@ -1,5 +1,6 @@
 package am.aua.placement;
 
+import am.aua.placement.entity.Module;
 import am.aua.placement.entity.Net;
 import am.aua.placement.entity.PlacementResult;
 import am.aua.placement.objective.PlacementObjective;
@@ -19,7 +20,7 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
         this.objective = objective;
     }
 
-    public PlacementResult solve(Iterable<Long> modules, Iterable<Net> nets, int H, int W) {
+    public PlacementResult solve(Iterable<Module> modules, Iterable<Net> nets, int H, int W) {
         return null;
     }
 
