@@ -7,5 +7,5 @@ import am.aua.placement.entity.PlacementResult;
  * Created by sparik on 3/18/18.
  */
 public interface PlacementObjective {
-    Double calculate(Iterable<Net> nets, PlacementResult result);
+    double calculate(Iterable<Net> nets, PlacementResult result);
 }

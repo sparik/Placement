@@ -6,23 +6,23 @@ import java.util.*;
  * Created by sparik on 2/11/18.
  */
 public class Net {
-    private List<Long> modules;
+    private List<Module> modules;
 
-    public Net(Iterable<Long> modules) {
+    public Net(Iterable<Module> modules) {
         this.modules = new ArrayList<>();
 
-        for (Long module : modules) {
+        for (Module module : modules) {
             this.modules.add(module);
         }
     }
 
-    public Net(Long ... modules) {
+    public Net(Module ... modules) {
         this.modules = new ArrayList<>();
 
         Collections.addAll(this.modules, modules);
     }
 
-    public List<Long> getModules() {
+    public List<Module> getModules() {
         return new ArrayList<>(modules);
     }
 

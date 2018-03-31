@@ -1,5 +1,6 @@
 package am.aua.placement.partitioning.fm;
 
+import am.aua.placement.entity.Module;
 import am.aua.placement.entity.Net;
 import am.aua.placement.partitioning.PartitionSolver;
 import javafx.util.Pair;
@@ -8,19 +9,29 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-//TODO change iterable to collection
 public class FMPartitionSolver implements PartitionSolver {
-    @Override
-    public Pair<Set<Long>, Set<Long>> partition(Collection<Long> modules, Iterable<Net> nets, double balanceFactor) {
+
+    private double balanceFactor;
+
+    public FMPartitionSolver(double balanceFactor) {
+        this.balanceFactor = balanceFactor;
+    }
+
+    public FMPartitionSolver(double balanceFactor, Collection<Module> block1, Collection<Module> block2) {
+        this(balanceFactor);
+        // TODO
+    }
+
+    public Pair<Set<Long>, Set<Long>> partition(Collection<Module> modules, Iterable<Net> nets) {
         Collection<ModuleFM> fmModules = new HashSet<>();
         for (Long module :
                 modules) {
             fmModules.add(new ModuleFM(module));
         }
-        return partitionFM(fmModules, nets, balanceFactor);
+        return partitionFM(fmModules, nets);
     }
 
-    private Pair<Set<Long>, Set<Long>> partitionFM(Collection<ModuleFM> modules, Iterable<Net> nets, double balanceFactor) {
+    private Pair<Set<Long>, Set<Long>> partitionFM(Collection<ModuleFM> modules, Iterable<Net> nets) {
         initialPartition(modules);
         for (ModuleFM module :
                 modules) {

@@ -1,16 +1,14 @@
 package am.aua.placement.partitioning.fm;
 
-//TODO this should extend global Module
-public class ModuleFM {
-    private long id;
+import am.aua.placement.entity.Module;
+
+public class ModuleFM extends Module {
     private boolean isLocked;
     private int gain;
     private BlockType blockType;
 
     public ModuleFM(long id) {
-        this.id = id;
-        this.isLocked = false; //TODO default?
-
+        super(id);
     }
 
     public boolean isLocked() {
