@@ -35,7 +35,7 @@ public class KLPartitionSolver implements PartitionSolver {
     // assume random initial partition
     public ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int ... partSizes) {
         if (partSizes.length != 2) {
-            throw new IllegalArgumentException("Only two-way partition is implemented.");
+            throw new IllegalArgumentException("Only two-way partitioning is implemented.");
         }
         int totalSize = partSizes[0] + partSizes[1];
         if (totalSize != modules.size()) {
@@ -47,14 +47,12 @@ public class KLPartitionSolver implements PartitionSolver {
 
     public ModulePartition partition(ModulePartition initialPartition, Collection<Net> nets) {
         if (initialPartition.getBlocks().size() != 2) {
-            throw new IllegalArgumentException("Only two-way partition is implemented.");
+            throw new IllegalArgumentException("Only two-way partitioning is implemented.");
         }
 
         this.modules = new ArrayList<>(initialPartition.getModules());
-
         this.nets = new ArrayList<>(nets);
-        this.modules = new ArrayList<>(modules);
-        numModules = modules.size();
+        this.numModules = this.modules.size();
 
         initializeGraph();
 
@@ -68,20 +66,6 @@ public class KLPartitionSolver implements PartitionSolver {
 
         return currentPartition;
     }
-
-    public void setInitialPartition(ModulePartition initialPartition) {
-        Set<PartitionBlock> blocks = initialPartition.getBlocks();
-        boolean validInitialPartition = blocks.size() == 2;
-        validInitialPartition &= blocks.contains(PartitionBlock.withId(1));
-        validInitialPartition &= blocks.contains(PartitionBlock.withId(2));
-
-        if (!validInitialPartition) {
-            throw new IllegalArgumentException("Only two-way partition is implemented. Use blocks with id 1 and 2");
-        }
-
-        currentPartition = initialPartition;
-    }
-
 
     private boolean improvePartition() {
 
