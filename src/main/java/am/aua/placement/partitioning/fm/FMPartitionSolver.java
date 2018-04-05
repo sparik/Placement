@@ -7,12 +7,12 @@ import am.aua.placement.partitioning.PartitionSolver;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class FMPartitionSolver implements PartitionSolver {
-    private List<ModuleFM> block1 = new ArrayList<>();
-    private List<ModuleFM> block2 = new ArrayList<>();
+    private List<ModuleFM> block1 = new ArrayList<>(); //TODO remove this
+    private List<ModuleFM> block2 = new ArrayList<>(); //TODO remove this
     private List<ModuleFM> modules = new ArrayList<>();
     private List<NetFM> nets = new ArrayList<>(); //TODO tirumer
     private double balanceFactor;
@@ -47,9 +47,14 @@ public class FMPartitionSolver implements PartitionSolver {
         }
     }
 
-    public ModulePartition partition(Collection<Module> modules, Iterable<Net> nets) {
-        //TODO i dont need modules
+    public ModulePartition partition(Collection<Module> modules, Collection<Net> nets) {
+        //TODO i dont need local modules
         return partitionFM(this.modules, nets);
+    }
+
+    @Override
+    public ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int... partSizes) {
+        return null;
     }
 
     @Override
@@ -57,8 +62,32 @@ public class FMPartitionSolver implements PartitionSolver {
 
     }
 
-    private ModulePartition partitionFM(Collection<ModuleFM> modules, Iterable<Net> nets) {
+    private ModulePartition partitionFM(Collection<ModuleFM> modules, Collection<Net> nets) {
         initialPartition(modules);
+        while (true) {
+            setGainsIfUnlocked(modules);
+            ModuleFM baseModule = whichMaxGain(modules);
+            //TODO BALANCE CRITERION
+            baseModule.setLocked(true);
+            setGainsIfAffected(baseModule);
+        }
+
+    }
+
+    private void setGainsIfAffected(ModuleFM baseModule) {
+        for (NetFM netFM :
+                baseModule.getNets()) {
+            for (ModuleFM moduleFM :
+                    netFM.getModules()) {
+                if (!moduleFM.isLocked()) {
+                    int gain = getFS(moduleFM) - getTE(moduleFM);
+                    moduleFM.setGain(gain);
+                }
+            }
+        }
+    }
+
+    private void setGainsIfUnlocked(Collection<ModuleFM> modules) {
         for (ModuleFM module :
                 modules) {
             if (!module.isLocked()) {
@@ -76,15 +105,18 @@ public class FMPartitionSolver implements PartitionSolver {
         }
     }
 
-    private ModuleFM whichMaxGain(Iterable<ModuleFM> modules) {
-        ModuleFM moduleFM = modules.iterator().next();
-        ModuleFM maxGainModule = null;
-        while (moduleFM.isLocked()){
-            maxGainModule = modules.iterator().next();
+    private ModuleFM whichMaxGain(Collection<ModuleFM> modules) {
+        ModuleFM maxGainModule = modules.iterator().next();
+        try {
+            while (maxGainModule.isLocked()) {
+                maxGainModule = modules.iterator().next();
+            }
+        } catch (NoSuchElementException e) {
+            return null;
         }
         for (ModuleFM module :
                 modules) {
-            if (module.getGain() > maxGainModule.getGain()) {
+            if (!module.isLocked() && module.getGain() > maxGainModule.getGain()) {
                 maxGainModule = module; //TODO reference type probs check
             }
         }
