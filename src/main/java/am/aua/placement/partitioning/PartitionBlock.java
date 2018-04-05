@@ -3,8 +3,10 @@ package am.aua.placement.partitioning;
 public class PartitionBlock {
     private int id;
 
-    public PartitionBlock(int id) {
-        this.id = id;
+    public static PartitionBlock withId(int id) {
+        PartitionBlock result = new PartitionBlock(); // TODO maybe cache
+        result.id = id;
+        return result;
     }
 
     public int getId() {
