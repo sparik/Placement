@@ -14,7 +14,7 @@ public class FMPartitionSolver implements PartitionSolver {
     private List<ModuleFM> block1 = new ArrayList<>(); //TODO remove this
     private List<ModuleFM> block2 = new ArrayList<>(); //TODO remove this
     private List<ModuleFM> modules = new ArrayList<>();
-    private List<NetFM> nets = new ArrayList<>(); //TODO tirumer
+    private List<NetFM> nets = new ArrayList<>(); //TODO
     private double balanceFactor;
 
     public FMPartitionSolver(double balanceFactor) {
