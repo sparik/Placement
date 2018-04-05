@@ -44,7 +44,7 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
         switch (algorithm) {
             case KERNIGHAN_LEE: result = new KLPartitionSolver();
                 break;
-            case FIDUCCIA_MATTHEYSES: result = new FMPartitionSolver();
+            case FIDUCCIA_MATTHEYSES: result = new FMPartitionSolver(1.0);
                 break;
             default: result = null;
                 break;

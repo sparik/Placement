@@ -2,9 +2,9 @@ package am.aua.placement.partitioning.kl;
 
 import am.aua.placement.entity.Module;
 import am.aua.placement.entity.Net;
+import am.aua.placement.partitioning.ModulePartition;
+import am.aua.placement.partitioning.PartitionBlock;
 import am.aua.placement.partitioning.PartitionSolver;
-import com.sun.tools.jdeps.Graph;
-import javafx.util.Pair;
 
 import java.util.*;
 
@@ -13,80 +13,154 @@ import java.util.*;
  */
 public class KLPartitionSolver implements PartitionSolver {
 
-    private ArrayList<Module> part1;
-    private ArrayList<Module> part2;
-    private ArrayList<Net> nets;
-    private int[][] interchangeGain;
-    private int[] internalCost;
-    private int[] externalCost;
+    private ModulePartition currentPartition;
+    private List<Net> nets;
+    private List<Module> modules;
+    private int[] internalCosts;
+    private int[] externalCosts;
+    private int[][] graph;
+    private int numModules;
+    private Map<Module, Integer> moduleToIdx;
 
 
+    public KLPartitionSolver() {
 
-    public KLPartitionSolver(Collection<Module> modules, Collection<Net> nets, int firstPartSize, int secondPartSize) {
-        if (firstPartSize + secondPartSize != modules.size()) {
-            throw new IllegalArgumentException("Sizes of blocks do not add up to the number of modules");
+    }
+
+    // assume equal parts
+    public ModulePartition partition(Collection<Module> modules, Collection<Net> nets) {
+        return partition(modules, nets, modules.size() / 2, modules.size() / 2);
+    }
+
+    public ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int ... partSizes) {
+
+        if (partSizes.length != 2) {
+            throw new IllegalArgumentException("Only two-way partition is implemented.");
         }
-        initializePartition(modules, firstPartSize);
-    }
+        int totalSize = partSizes[0] + partSizes[1];
+        if (totalSize != modules.size()) {
+            throw new IllegalArgumentException("Number of modules is not equal to the sum of part sizes");
+        }
 
-    public KLPartitionSolver(Collection<Module> modules, Collection<Net> nets) {
-        this(modules, nets, modules.size() / 2, modules.size() / 2);
-    }
+        if (currentPartition != null) {
+            if (currentPartition.size() != modules.size()) {
+                throw new IllegalArgumentException("xz");
+            }
+        }
+        else {
+            currentPartition = getRandomPartition(modules, partSizes[0]);
+        }
 
-    public KLPartitionSolver(Collection<Module> block1, Collection<Module> block2, Collection<Net> nets) {
-        this.part1 = new ArrayList<>(block1);
-        this.part2 = new ArrayList<>(block2);
         this.nets = new ArrayList<>(nets);
-    }
+        this.modules = new ArrayList<>(modules);
+        numModules = modules.size();
 
-    public Pair<Set<Module>, Set<Module>> partition() {
+        initializeGraph();
 
-        boolean can_improve = false;
+        // start of the algorithm
 
-
+        boolean can_improve = true;
 
         while (can_improve) {
-            HashSet<Module> X = new HashSet<>();
-            HashSet<Module> Y = new HashSet<>();
+            can_improve = improvePartition();
         }
 
-        return null;
+        return currentPartition;
     }
 
-    private void initializePartition(Collection<Module> modules, int firstPartSize) {
-        this.part1 = new ArrayList<>();
-        this.part2 = new ArrayList<>();
+    public void setInitialPartition(ModulePartition initialPartition) {
+        currentPartition = initialPartition;
+    }
+
+
+    private boolean improvePartition() {
+
+        initializeCosts();
+
+        return true;
+    }
+
+
+    private ModulePartition getRandomPartition(Collection<Module> modules, int firstPartSize) {
+        ModulePartition result = new ModulePartition();
+        PartitionBlock firstPart = new PartitionBlock(1);
+        PartitionBlock secondPart = new PartitionBlock(2);
 
         int idx = 0;
         for (Module module : modules) {
             if (idx < firstPartSize) {
-                this.part1.add(module);
+                result.put(module, firstPart);
             }
             else {
-                this.part2.add(module);
+                result.put(module, secondPart);
             }
             ++idx;
         }
+
+        return result;
     }
 
-    private void initializeGainsOfInterchanges() {
+    private void initializeGraph() {
+        graph = new int[numModules][numModules];
 
-        int sizeA = this.part1.size();
-        int sizeB = this.part2.size();
+        for (Net net : nets) {
+            List<Module> modulesInNet = net.getModules();
+            int numModulesInNet = modulesInNet.size();
+            for (int i = 0; i < numModulesInNet; ++i) {
+                for (int j = i + 1; j < numModulesInNet; ++j) {
+                    Module module1 = modulesInNet.get(i);
+                    Module module2 = modulesInNet.get(j);
+                    int module1Idx = moduleToIdx.get(module1);
+                    int module2Idx = moduleToIdx.get(module2);
 
-        interchangeGain = new int[sizeA][sizeB];
+                    ++graph[module1Idx][module2Idx];
+                    ++graph[module2Idx][module1Idx];
+                }
+            }
+        }
+    }
 
+    private void initializeCosts() {
 
-        for (int i = 0; i < sizeA; ++i) {
+        internalCosts = new int[numModules];
+        externalCosts = new int[numModules];
+
+        for (int i = 0; i < numModules; ++i) {
+            PartitionBlock blockContainingModule = currentPartition.get(modules.get(i));
+            Integer internalCost = 0;
+            Integer externalCost = 0;
+
+            for (int j = i + 1; j < numModules; ++j) {
+                if (currentPartition.get(modules.get(j)) == blockContainingModule) {
+                    ++internalCosts[i];
+                    ++internalCosts[j];
+                }
+                else {
+                    ++externalCosts[i];
+                    ++externalCosts[j];
+                }
+            }
 
         }
     }
 
     private int dValue(int v) {
-        return this.externalCost[v] - this.internalCost[v];
+        return externalCosts[v] - internalCosts[v];
     }
 
     private int gainOfInterchange(int a, int b) {
-        return this.dValue(a) + this.dValue(b); // TODO change
+        return this.dValue(a) + this.dValue(b) - graph[a][b]; // TODO change
+    }
+
+
+    private void initializeModuleToIdMapping(Collection<Module> modules) {
+        moduleToIdx = new HashMap<>(modules.size());
+
+        int idx = 0;
+
+        for (Module module : modules) {
+            moduleToIdx.put(module, idx);
+            ++idx;
+        }
     }
 }

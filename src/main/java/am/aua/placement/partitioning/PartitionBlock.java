@@ -8,6 +8,21 @@ public class PartitionBlock {
     }
 
     public int getId() {
-        return this.id;
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PartitionBlock that = (PartitionBlock) o;
+
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
     }
 }

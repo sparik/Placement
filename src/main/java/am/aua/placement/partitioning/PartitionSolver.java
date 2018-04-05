@@ -9,6 +9,7 @@ import java.util.Set;
 
 public interface PartitionSolver {
     // TODO rad anel pair@
-    ModulePartition partition(Collection<Module> modules, Iterable<Net> nets);
+    ModulePartition partition(Collection<Module> modules, Collection<Net> nets);
+    ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int ... partSizes);
     void setInitialPartition(ModulePartition initialPartition);
 }
