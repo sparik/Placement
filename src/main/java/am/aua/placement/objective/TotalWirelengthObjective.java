@@ -1,6 +1,7 @@
 package am.aua.placement.objective;
 
 import am.aua.placement.entity.*;
+import am.aua.placement.entity.Module;
 
 import java.util.ArrayList;
 import java.util.List;
