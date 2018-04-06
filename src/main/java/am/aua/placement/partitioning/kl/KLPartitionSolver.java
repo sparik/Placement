@@ -81,6 +81,8 @@ public class KLPartitionSolver implements PartitionSolver {
 
         int maxSwaps = firstPart.size() < secondPart.size() ? firstPart.size() : secondPart.size();
 
+        System.out.println("maxswaps = " + maxSwaps);
+
         List<ModulePair> swappedModules = new ArrayList<>(maxSwaps);
         Set<Module> lockedModules = new HashSet<>(2 * maxSwaps);
 
@@ -92,6 +94,8 @@ public class KLPartitionSolver implements PartitionSolver {
 
             ModulePair bestSwap = getMaxGainPair(firstPart, secondPart, lockedModules);
 
+            System.out.println("best swap " + bestSwap.first.getId() + " " + bestSwap.second.getId());
+
             swappedModules.add(bestSwap);
             lockedModules.add(bestSwap.first);
             lockedModules.add(bestSwap.second);
@@ -99,25 +103,29 @@ public class KLPartitionSolver implements PartitionSolver {
             int firstIdx = moduleToIdx.get(bestSwap.first);
             int secondIdx = moduleToIdx.get(bestSwap.second);
 
-            moveModuleAndRecalculateCosts(bestSwap.first, secondBlock);
-            moveModuleAndRecalculateCosts(bestSwap.second, firstBlock);
-
             totalGain += gainOfInterchange(firstIdx, secondIdx);
             if (totalGain > maxTotalGain) {
                 maxTotalGain = totalGain;
                 bestSwapIndex = i;
             }
+            System.out.println("total gain " + totalGain);
+
+            moveModuleAndRecalculateCosts(bestSwap.first, secondBlock);
+            moveModuleAndRecalculateCosts(bestSwap.second, firstBlock);
         }
 
+        System.out.println("best swap index = " + bestSwapIndex);
+        System.out.println();
         for (int i = bestSwapIndex + 1; i < maxSwaps; ++i) {
-            moveModuleAndRecalculateCosts(swappedModules.get(i).first, secondBlock);
-            moveModuleAndRecalculateCosts(swappedModules.get(i).second, firstBlock);
+            moveModuleAndRecalculateCosts(swappedModules.get(i).first, firstBlock);
+            moveModuleAndRecalculateCosts(swappedModules.get(i).second, secondBlock);
         }
 
         return bestSwapIndex != -1;
     }
 
     private void moveModuleAndRecalculateCosts(Module module, PartitionBlock targetBlock) {
+        System.out.println("move module with id " + module.getId() + " to block " + targetBlock.getId());
         PartitionBlock currentBlock = modulePartition.getBlockForModule(module);
         if (currentBlock.equals(targetBlock)) {
             return;
@@ -156,6 +164,7 @@ public class KLPartitionSolver implements PartitionSolver {
     }
 
 
+    // TODO make random
     private ModulePartition getRandomPartition(Collection<Module> modules, int firstPartSize) {
         ModulePartition result = new ModulePartition();
         PartitionBlock firstPart = PartitionBlock.withId(1);
@@ -204,16 +213,20 @@ public class KLPartitionSolver implements PartitionSolver {
             PartitionBlock blockContainingModule = modulePartition.getBlockForModule(modules.get(i));
 
             for (int j = i + 1; j < numModules; ++j) {
+                //System.out.println(String.format("i=%d, j=%d, bi=%d, bj=%d", i + 1, j + 1, blockContainingModule.getId(), modulePartition.getBlockForModule(modules.get(j)).getId()));
                 if (modulePartition.getBlockForModule(modules.get(j)) == blockContainingModule) {
-                    ++internalCosts[i];
-                    ++internalCosts[j];
+                    internalCosts[i] += graph[i][j];
+                    internalCosts[j] += graph[i][j];
                 }
                 else {
-                    ++externalCosts[i];
-                    ++externalCosts[j];
+                    externalCosts[i] += graph[i][j];
+                    externalCosts[j] += graph[i][j];
                 }
             }
+        }
 
+        for (int i = 0; i < numModules; ++i) {
+            System.out.println(String.format("v=%d, ic=%d, ec=%d", i + 1, internalCosts[i], externalCosts[i]));
         }
     }
 

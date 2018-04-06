@@ -1,12 +1,28 @@
 package am.aua.placement.partitioning;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class PartitionBlock {
-    private int id;
+
+    private static final Map<Integer, PartitionBlock> instances = new HashMap<>();
 
     public static PartitionBlock withId(int id) {
-        PartitionBlock result = new PartitionBlock(); // TODO maybe cache
+        if (instances.containsKey(id)) {
+            return instances.get(id);
+        }
+
+        PartitionBlock result = new PartitionBlock();
         result.id = id;
+
+        instances.put(id, result);
+
         return result;
+    }
+
+    private int id;
+
+    private PartitionBlock() {
     }
 
     public int getId() {

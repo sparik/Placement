@@ -2,10 +2,7 @@ package am.aua.placement.partitioning;
 
 import am.aua.placement.entity.Module;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ModulePartition {
 
@@ -26,6 +23,12 @@ public class ModulePartition {
     }
 
     public void setBlockForModule(Module module, PartitionBlock block) {
+
+        if (partition.containsKey(module)) {
+            PartitionBlock currentBlock = partition.get(module);
+            blocks.get(currentBlock).remove(module);
+        }
+
         partition.put(module, block);
         if (!blocks.containsKey(block)) {
             blocks.put(block, new HashSet<>());
@@ -43,5 +46,16 @@ public class ModulePartition {
 
     public Set<Module> getModules() {
         return partition.keySet();
+    }
+
+    public void setModulesForBlock(PartitionBlock block, Module... modules) {
+        if (!blocks.containsKey(block)) {
+            blocks.put(block, new HashSet<>(modules.length));
+        }
+        Collections.addAll(blocks.get(block), modules);
+
+        for (Module module : modules) {
+            partition.put(module, block);
+        }
     }
 }

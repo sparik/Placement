@@ -16,17 +16,13 @@ import java.util.List;
  */
 public class TestTotalWirelengthObjective {
 
-    private PlacementObjective objective;
-
-    public TestTotalWirelengthObjective() {
-        objective = TotalWirelengthObjective.getInstance();
-    }
+    private final PlacementObjective objective = TotalWirelengthObjective.getInstance();
 
     @Test(expected = ObjectiveCalculationException.class)
     public void testWirelengthCalculation1() {
-        Module module1 = new Module(0);
-        Module module2 = new Module(1);
-        Module module3 = new Module(2);
+        Module module1 = Module.withId(0);
+        Module module2 = Module.withId(1);
+        Module module3 = Module.withId(2);
 
         List<Net> netList = new ArrayList<>();
         netList.add(new Net(module1, module2, module3));
@@ -40,9 +36,9 @@ public class TestTotalWirelengthObjective {
 
     @Test
     public void testWirelengthCalculation2() {
-        Module module1 = new Module(0);
-        Module module2 = new Module(1);
-        Module module3 = new Module(2);
+        Module module1 = Module.withId(0);
+        Module module2 = Module.withId(1);
+        Module module3 = Module.withId(2);
 
         List<Net> netList = new ArrayList<>();
         netList.add(new Net(module1, module2, module3));

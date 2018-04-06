@@ -1,16 +1,31 @@
 package am.aua.placement.entity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by sparik on 3/31/18.
  */
 public class Module {
-    public Module() {
+
+    private static final Map<Long, Module> instances = new HashMap<>();
+
+    public static Module withId(long id) {
+        if (instances.containsKey(id)) {
+            return instances.get(id);
+        }
+
+        Module result = new Module();
+        result.id = id;
+
+        instances.put(id, result);
+
+        return result;
     }
 
     private long id;
 
-    public Module(long id) {
-        this.id = id;
+    private Module() {
     }
 
     public long getId() {
