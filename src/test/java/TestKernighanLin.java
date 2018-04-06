@@ -34,10 +34,6 @@ public class TestKernighanLin {
 
         ModulePartition result = kernighanLin.partition(initialPartition, netList);
 
-        for (int i = 1; i <= 6; ++i) {
-            System.out.println(result.getBlockForModule(Module.withId(i)).getId());
-        }
-
         Assert.assertEquals(result.getBlocks().size(), 2);
         Assert.assertEquals(result.getModules().size(), 6);
         Assert.assertEquals(result.getModulesInBlock(firstBlock).contains(Module.withId(1)), true);

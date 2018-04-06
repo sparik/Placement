@@ -81,8 +81,6 @@ public class KLPartitionSolver implements PartitionSolver {
 
         int maxSwaps = firstPart.size() < secondPart.size() ? firstPart.size() : secondPart.size();
 
-        System.out.println("maxswaps = " + maxSwaps);
-
         List<ModulePair> swappedModules = new ArrayList<>(maxSwaps);
         Set<Module> lockedModules = new HashSet<>(2 * maxSwaps);
 
@@ -93,8 +91,6 @@ public class KLPartitionSolver implements PartitionSolver {
         for (int i = 0; i < maxSwaps; ++i) {
 
             ModulePair bestSwap = getMaxGainPair(firstPart, secondPart, lockedModules);
-
-            System.out.println("best swap " + bestSwap.first.getId() + " " + bestSwap.second.getId());
 
             swappedModules.add(bestSwap);
             lockedModules.add(bestSwap.first);
@@ -108,14 +104,11 @@ public class KLPartitionSolver implements PartitionSolver {
                 maxTotalGain = totalGain;
                 bestSwapIndex = i;
             }
-            System.out.println("total gain " + totalGain);
 
             moveModuleAndRecalculateCosts(bestSwap.first, secondBlock);
             moveModuleAndRecalculateCosts(bestSwap.second, firstBlock);
         }
 
-        System.out.println("best swap index = " + bestSwapIndex);
-        System.out.println();
         for (int i = bestSwapIndex + 1; i < maxSwaps; ++i) {
             moveModuleAndRecalculateCosts(swappedModules.get(i).first, firstBlock);
             moveModuleAndRecalculateCosts(swappedModules.get(i).second, secondBlock);
@@ -125,7 +118,6 @@ public class KLPartitionSolver implements PartitionSolver {
     }
 
     private void moveModuleAndRecalculateCosts(Module module, PartitionBlock targetBlock) {
-        System.out.println("move module with id " + module.getId() + " to block " + targetBlock.getId());
         PartitionBlock currentBlock = modulePartition.getBlockForModule(module);
         if (currentBlock.equals(targetBlock)) {
             return;
@@ -213,7 +205,6 @@ public class KLPartitionSolver implements PartitionSolver {
             PartitionBlock blockContainingModule = modulePartition.getBlockForModule(modules.get(i));
 
             for (int j = i + 1; j < numModules; ++j) {
-                //System.out.println(String.format("i=%d, j=%d, bi=%d, bj=%d", i + 1, j + 1, blockContainingModule.getId(), modulePartition.getBlockForModule(modules.get(j)).getId()));
                 if (modulePartition.getBlockForModule(modules.get(j)) == blockContainingModule) {
                     internalCosts[i] += graph[i][j];
                     internalCosts[j] += graph[i][j];
@@ -223,10 +214,6 @@ public class KLPartitionSolver implements PartitionSolver {
                     externalCosts[j] += graph[i][j];
                 }
             }
-        }
-
-        for (int i = 0; i < numModules; ++i) {
-            System.out.println(String.format("v=%d, ic=%d, ec=%d", i + 1, internalCosts[i], externalCosts[i]));
         }
     }
 
