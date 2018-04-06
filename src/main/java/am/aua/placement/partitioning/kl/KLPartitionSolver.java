@@ -13,7 +13,7 @@ import java.util.*;
  */
 public class KLPartitionSolver implements PartitionSolver {
 
-    private ModulePartition currentPartition;
+    private ModulePartition modulePartition;
     private List<Net> nets;
     private List<Module> modules;
     private int[] internalCosts;
@@ -21,6 +21,8 @@ public class KLPartitionSolver implements PartitionSolver {
     private int[][] graph;
     private int numModules;
     private Map<Module, Integer> moduleToIdx;
+    private final PartitionBlock firstBlock = PartitionBlock.withId(1);
+    private final PartitionBlock secondBlock = PartitionBlock.withId(2);
 
 
     public KLPartitionSolver() {
@@ -53,6 +55,9 @@ public class KLPartitionSolver implements PartitionSolver {
         this.modules = new ArrayList<>(initialPartition.getModules());
         this.nets = new ArrayList<>(nets);
         this.numModules = this.modules.size();
+        this.modulePartition = initialPartition;
+
+        initializeModuleToIdMapping(modules);
 
         initializeGraph();
 
@@ -64,14 +69,90 @@ public class KLPartitionSolver implements PartitionSolver {
             can_improve = improvePartition();
         }
 
-        return currentPartition;
+        return modulePartition;
     }
 
     private boolean improvePartition() {
 
         initializeCosts();
 
-        return true;
+        Set<Module> firstPart = modulePartition.getModulesInBlock(firstBlock);
+        Set<Module> secondPart = modulePartition.getModulesInBlock(secondBlock);
+
+        int maxSwaps = firstPart.size() < secondPart.size() ? firstPart.size() : secondPart.size();
+
+        List<ModulePair> swappedModules = new ArrayList<>(maxSwaps);
+        Set<Module> lockedModules = new HashSet<>(2 * maxSwaps);
+
+        long totalGain = 0;
+        long maxTotalGain = 0;
+        int bestSwapIndex = -1;
+
+        for (int i = 0; i < maxSwaps; ++i) {
+
+            ModulePair bestSwap = getMaxGainPair(firstPart, secondPart, lockedModules);
+
+            swappedModules.add(bestSwap);
+            lockedModules.add(bestSwap.first);
+            lockedModules.add(bestSwap.second);
+
+            int firstIdx = moduleToIdx.get(bestSwap.first);
+            int secondIdx = moduleToIdx.get(bestSwap.second);
+
+            moveModuleAndRecalculateCosts(bestSwap.first, secondBlock);
+            moveModuleAndRecalculateCosts(bestSwap.second, firstBlock);
+
+            totalGain += gainOfInterchange(firstIdx, secondIdx);
+            if (totalGain > maxTotalGain) {
+                maxTotalGain = totalGain;
+                bestSwapIndex = i;
+            }
+        }
+
+        for (int i = bestSwapIndex + 1; i < maxSwaps; ++i) {
+            moveModuleAndRecalculateCosts(swappedModules.get(i).first, secondBlock);
+            moveModuleAndRecalculateCosts(swappedModules.get(i).second, firstBlock);
+        }
+
+        return bestSwapIndex != -1;
+    }
+
+    private void moveModuleAndRecalculateCosts(Module module, PartitionBlock targetBlock) {
+        PartitionBlock currentBlock = modulePartition.getBlockForModule(module);
+        if (currentBlock.equals(targetBlock)) {
+            return;
+        }
+
+        int moduleIdx = moduleToIdx.get(module);
+
+        Set<Module> modulesInCurrentBlock = modulePartition.getModulesInBlock(currentBlock);
+        Set<Module> modulesInTargetBlock = modulePartition.getModulesInBlock(targetBlock);
+
+        internalCosts[moduleIdx] = 0;
+        externalCosts[moduleIdx] = 0;
+
+        for (Module other : modulesInCurrentBlock) {
+            int otherModuleIdx = moduleToIdx.get(other);
+
+            if (moduleIdx == otherModuleIdx) {
+                continue;
+            }
+
+            internalCosts[otherModuleIdx] -= graph[otherModuleIdx][moduleIdx];
+            externalCosts[otherModuleIdx] += graph[otherModuleIdx][moduleIdx];
+
+            externalCosts[moduleIdx] += graph[otherModuleIdx][moduleIdx];
+        }
+
+        for (Module other : modulesInTargetBlock) {
+            int otherModuleIdx = moduleToIdx.get(other);
+            internalCosts[otherModuleIdx] += graph[otherModuleIdx][moduleIdx];
+            externalCosts[otherModuleIdx] -= graph[otherModuleIdx][moduleIdx];
+
+            internalCosts[moduleIdx] += graph[otherModuleIdx][moduleIdx];
+        }
+
+        modulePartition.setBlockForModule(module, targetBlock);
     }
 
 
@@ -120,12 +201,10 @@ public class KLPartitionSolver implements PartitionSolver {
         externalCosts = new int[numModules];
 
         for (int i = 0; i < numModules; ++i) {
-            PartitionBlock blockContainingModule = currentPartition.getBlockForModule(modules.get(i));
-            Integer internalCost = 0;
-            Integer externalCost = 0;
+            PartitionBlock blockContainingModule = modulePartition.getBlockForModule(modules.get(i));
 
             for (int j = i + 1; j < numModules; ++j) {
-                if (currentPartition.getBlockForModule(modules.get(j)) == blockContainingModule) {
+                if (modulePartition.getBlockForModule(modules.get(j)) == blockContainingModule) {
                     ++internalCosts[i];
                     ++internalCosts[j];
                 }
@@ -143,7 +222,7 @@ public class KLPartitionSolver implements PartitionSolver {
     }
 
     private int gainOfInterchange(int a, int b) {
-        return this.dValue(a) + this.dValue(b) - graph[a][b]; // TODO change
+        return this.dValue(a) + this.dValue(b) - 2 * graph[a][b];
     }
 
 
@@ -156,5 +235,38 @@ public class KLPartitionSolver implements PartitionSolver {
             moduleToIdx.put(module, idx);
             ++idx;
         }
+    }
+
+    private class ModulePair {
+        private Module first;
+        private Module second;
+    }
+
+    private ModulePair getMaxGainPair(Collection<Module> firstPart, Collection<Module> secondPart, Collection<Module> lockedModules) {
+        int maxGain = Integer.MIN_VALUE;
+        ModulePair result = new ModulePair();
+
+        for (Module moduleFromFirst : firstPart) {
+            if (lockedModules.contains(moduleFromFirst)) {
+                continue;
+            }
+
+            int module1Idx = moduleToIdx.get(moduleFromFirst);
+            for (Module moduleFromSecond : secondPart) {
+                if (lockedModules.contains(moduleFromSecond)) {
+                    continue;
+                }
+
+                int module2Idx = moduleToIdx.get(moduleFromSecond);
+                int curGain = gainOfInterchange(module1Idx, module2Idx);
+                if (curGain > maxGain) {
+                    maxGain = curGain;
+                    result.first = (moduleFromFirst);
+                    result.second = (moduleFromSecond);
+                }
+            }
+        }
+
+        return result;
     }
 }
