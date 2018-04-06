@@ -10,6 +10,8 @@ import am.aua.placement.partitioning.PartitioningAlgorithm;
 import am.aua.placement.partitioning.fm.FMPartitionSolver;
 import am.aua.placement.partitioning.kl.KLPartitionSolver;
 
+import java.util.Collection;
+
 /**
  * Created by sparik on 2/11/18.
  */
@@ -32,7 +34,7 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
         this(TotalWirelengthObjective.getInstance(), PartitioningAlgorithm.KERNIGHAN_LEE);
     }
 
-    public PlacementResult solve(Iterable<Module> modules, Iterable<Net> nets, int H, int W) {
+    public PlacementResult solve(Collection<Module> modules, Collection<Net> nets, int H, int W) {
         return null;
     }
 

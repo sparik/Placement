@@ -47,6 +47,11 @@ public class FMPartitionSolver implements PartitionSolver {
         }
     }
 
+    @Override
+    public ModulePartition partition(ModulePartition initialPartition, Collection<Net> nets) {
+        return null;
+    }
+
     public ModulePartition partition(Collection<Module> modules, Collection<Net> nets) {
         //TODO i dont need local modules
         return partitionFM(this.modules, nets);
@@ -55,11 +60,6 @@ public class FMPartitionSolver implements PartitionSolver {
     @Override
     public ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int... partSizes) {
         return null;
-    }
-
-    @Override
-    public void setInitialPartition(ModulePartition initialPartition) {
-
     }
 
     private ModulePartition partitionFM(Collection<ModuleFM> modules, Collection<Net> nets) {

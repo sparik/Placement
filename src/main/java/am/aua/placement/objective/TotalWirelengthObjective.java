@@ -4,6 +4,7 @@ import am.aua.placement.entity.*;
 import am.aua.placement.entity.Module;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -17,7 +18,7 @@ public class TotalWirelengthObjective implements PlacementObjective {
         return instance;
     }
 
-    public double calculate(Iterable<Net> nets, PlacementResult result) {
+    public double calculate(Collection<Net> nets, PlacementResult result) {
 
         double totalWirelength = 0.0;
 
