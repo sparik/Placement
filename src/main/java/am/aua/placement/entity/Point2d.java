@@ -19,4 +19,12 @@ public class Point2d {
     public double getY() {
         return y;
     }
+
+    @Override
+    public String toString() {
+        return "Point2d{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
+    }
 }

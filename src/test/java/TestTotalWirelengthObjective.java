@@ -28,8 +28,8 @@ public class TestTotalWirelengthObjective {
         netList.add(new Net(module1, module2, module3));
 
         PlacementResult placement = new PlacementResult();
-        placement.put(module1, new Slot(1, 2));
-        placement.put(module2, new Slot(2, 3));
+        placement.setSlotForModule(module1, new Slot(1, 2));
+        placement.setSlotForModule(module2, new Slot(2, 3));
 
         double result = objective.calculate(netList, placement);
     }
@@ -44,9 +44,9 @@ public class TestTotalWirelengthObjective {
         netList.add(new Net(module1, module2, module3));
 
         PlacementResult placement = new PlacementResult();
-        placement.put(module1, new Slot(1, 2));
-        placement.put(module2, new Slot(2, 3));
-        placement.put(module3, new Slot(10, 7));
+        placement.setSlotForModule(module1, new Slot(1, 2));
+        placement.setSlotForModule(module2, new Slot(2, 3));
+        placement.setSlotForModule(module3, new Slot(10, 7));
 
         double expectedResult = 14;
 

@@ -9,6 +9,10 @@ import java.util.Map;
 public class Module {
 
     private static final Map<Long, Module> instances = new HashMap<>();
+    private long id;
+
+    private Module() {
+    }
 
     public static Module withId(long id) {
         if (instances.containsKey(id)) {
@@ -21,11 +25,6 @@ public class Module {
         instances.put(id, result);
 
         return result;
-    }
-
-    private long id;
-
-    private Module() {
     }
 
     public long getId() {

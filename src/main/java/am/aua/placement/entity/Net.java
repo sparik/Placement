@@ -1,6 +1,8 @@
 package am.aua.placement.entity;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by sparik on 2/11/18.
@@ -16,7 +18,7 @@ public class Net {
         }
     }
 
-    public Net(Module ... modules) {
+    public Net(Module... modules) {
         this.modules = new ArrayList<>();
 
         Collections.addAll(this.modules, modules);

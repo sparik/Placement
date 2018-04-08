@@ -13,16 +13,16 @@ import java.util.*;
  */
 public class KLPartitionSolver implements PartitionSolver {
 
+    private final PartitionBlock firstBlock = PartitionBlock.withId(1);
+    private final PartitionBlock secondBlock = PartitionBlock.withId(2);
     private ModulePartition modulePartition;
     private List<Net> nets;
     private List<Module> modules;
     private int[] internalCosts;
     private int[] externalCosts;
     private int[][] graph;
-    private int numModules;
+    private int moduleCount;
     private Map<Module, Integer> moduleToIdx;
-    private final PartitionBlock firstBlock = PartitionBlock.withId(1);
-    private final PartitionBlock secondBlock = PartitionBlock.withId(2);
 
 
     public KLPartitionSolver() {
@@ -35,7 +35,7 @@ public class KLPartitionSolver implements PartitionSolver {
     }
 
     // assume random initial partition
-    public ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int ... partSizes) {
+    public ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int... partSizes) {
         if (partSizes.length != 2) {
             throw new IllegalArgumentException("Only two-way partitioning is implemented.");
         }
@@ -44,7 +44,7 @@ public class KLPartitionSolver implements PartitionSolver {
             throw new IllegalArgumentException("Number of modules is not equal to the sum of part sizes");
         }
 
-        return partition(getRandomPartition(modules, partSizes[0]), nets);
+        return partition(ModulePartition.getRandomPartition(modules, partSizes[0]), nets);
     }
 
     public ModulePartition partition(ModulePartition initialPartition, Collection<Net> nets) {
@@ -54,7 +54,7 @@ public class KLPartitionSolver implements PartitionSolver {
 
         this.modules = new ArrayList<>(initialPartition.getModules());
         this.nets = new ArrayList<>(nets);
-        this.numModules = this.modules.size();
+        this.moduleCount = this.modules.size();
         this.modulePartition = initialPartition;
 
         initializeModuleToIdMapping(modules);
@@ -63,10 +63,10 @@ public class KLPartitionSolver implements PartitionSolver {
 
         // start of the algorithm
 
-        boolean can_improve = true;
+        boolean canImprove = true;
 
-        while (can_improve) {
-            can_improve = improvePartition();
+        while (canImprove) {
+            canImprove = improvePartition();
         }
 
         return modulePartition;
@@ -156,37 +156,24 @@ public class KLPartitionSolver implements PartitionSolver {
     }
 
 
-    // TODO make random
-    private ModulePartition getRandomPartition(Collection<Module> modules, int firstPartSize) {
-        ModulePartition result = new ModulePartition();
-        PartitionBlock firstPart = PartitionBlock.withId(1);
-        PartitionBlock secondPart = PartitionBlock.withId(2);
-
-        int idx = 0;
-        for (Module module : modules) {
-            if (idx < firstPartSize) {
-                result.setBlockForModule(module, firstPart);
-            }
-            else {
-                result.setBlockForModule(module, secondPart);
-            }
-            ++idx;
-        }
-
-        return result;
-    }
-
     private void initializeGraph() {
-        graph = new int[numModules][numModules];
+        graph = new int[moduleCount][moduleCount];
 
         for (Net net : nets) {
             List<Module> modulesInNet = net.getModules();
             int numModulesInNet = modulesInNet.size();
             for (int i = 0; i < numModulesInNet; ++i) {
+                Module module1 = modulesInNet.get(i);
+                if (!moduleToIdx.containsKey(module1)) {
+                    continue;
+                }
+                int module1Idx = moduleToIdx.get(module1);
+
                 for (int j = i + 1; j < numModulesInNet; ++j) {
-                    Module module1 = modulesInNet.get(i);
                     Module module2 = modulesInNet.get(j);
-                    int module1Idx = moduleToIdx.get(module1);
+                    if (!moduleToIdx.containsKey(module2)) {
+                        continue;
+                    }
                     int module2Idx = moduleToIdx.get(module2);
 
                     ++graph[module1Idx][module2Idx];
@@ -198,18 +185,17 @@ public class KLPartitionSolver implements PartitionSolver {
 
     private void initializeCosts() {
 
-        internalCosts = new int[numModules];
-        externalCosts = new int[numModules];
+        internalCosts = new int[moduleCount];
+        externalCosts = new int[moduleCount];
 
-        for (int i = 0; i < numModules; ++i) {
+        for (int i = 0; i < moduleCount; ++i) {
             PartitionBlock blockContainingModule = modulePartition.getBlockForModule(modules.get(i));
 
-            for (int j = i + 1; j < numModules; ++j) {
+            for (int j = i + 1; j < moduleCount; ++j) {
                 if (modulePartition.getBlockForModule(modules.get(j)) == blockContainingModule) {
                     internalCosts[i] += graph[i][j];
                     internalCosts[j] += graph[i][j];
-                }
-                else {
+                } else {
                     externalCosts[i] += graph[i][j];
                     externalCosts[j] += graph[i][j];
                 }
@@ -222,7 +208,7 @@ public class KLPartitionSolver implements PartitionSolver {
     }
 
     private int gainOfInterchange(int a, int b) {
-        return this.dValue(a) + this.dValue(b) - 2 * graph[a][b];
+        return dValue(a) + dValue(b) - 2 * graph[a][b];
     }
 
 
@@ -235,11 +221,6 @@ public class KLPartitionSolver implements PartitionSolver {
             moduleToIdx.put(module, idx);
             ++idx;
         }
-    }
-
-    private class ModulePair {
-        private Module first;
-        private Module second;
     }
 
     private ModulePair getMaxGainPair(Collection<Module> firstPart, Collection<Module> secondPart, Collection<Module> lockedModules) {
@@ -268,5 +249,10 @@ public class KLPartitionSolver implements PartitionSolver {
         }
 
         return result;
+    }
+
+    private class ModulePair {
+        private Module first;
+        private Module second;
     }
 }

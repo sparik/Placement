@@ -6,6 +6,10 @@ import java.util.Map;
 public class PartitionBlock {
 
     private static final Map<Integer, PartitionBlock> instances = new HashMap<>();
+    private int id;
+
+    private PartitionBlock() {
+    }
 
     public static PartitionBlock withId(int id) {
         if (instances.containsKey(id)) {
@@ -18,11 +22,6 @@ public class PartitionBlock {
         instances.put(id, result);
 
         return result;
-    }
-
-    private int id;
-
-    private PartitionBlock() {
     }
 
     public int getId() {

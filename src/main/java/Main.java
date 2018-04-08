@@ -18,11 +18,19 @@ public class Main {
 
         PlacementSolver solver = new PlacementSolverByPartitioning(objective, algorithm);
 
-        int H = 4;
-        int W = 4;
         List<Module> modules = new ArrayList<>();
-        List<Net> nets = new ArrayList<>();
+        modules.add(Module.withId(1));
+        modules.add(Module.withId(2));
+        modules.add(Module.withId(3));
+        modules.add(Module.withId(4));
 
-        PlacementResult result = solver.solve(modules, nets, H, W);
+        List<Net> nets = new ArrayList<>();
+        nets.add(new Net(Module.withId(1), Module.withId(3)));
+        nets.add(new Net(Module.withId(2), Module.withId(4)));
+
+        PlacementResult result = solver.solve(modules, nets, 2, 2);
+        for (Module module : modules) {
+            System.out.println(result.getSlotForModule(module));
+        }
     }
 }

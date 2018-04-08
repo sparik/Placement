@@ -7,6 +7,8 @@ import java.util.Collection;
 
 public interface PartitionSolver {
     ModulePartition partition(ModulePartition initialPartition, Collection<Net> nets);
+
     ModulePartition partition(Collection<Module> modules, Collection<Net> nets);
-    ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int ... partSizes);
+
+    ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int... partSizes);
 }

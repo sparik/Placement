@@ -14,6 +14,26 @@ public class ModulePartition {
         blocks = new HashMap<>();
     }
 
+    // TODO make random
+    // TODO handle more blocks
+    public static ModulePartition getRandomPartition(Collection<Module> modules, int firstPartSize) {
+        ModulePartition result = new ModulePartition();
+        PartitionBlock firstPart = PartitionBlock.withId(1);
+        PartitionBlock secondPart = PartitionBlock.withId(2);
+
+        int idx = 0;
+        for (Module module : modules) {
+            if (idx < firstPartSize) {
+                result.setBlockForModule(module, firstPart);
+            } else {
+                result.setBlockForModule(module, secondPart);
+            }
+            ++idx;
+        }
+
+        return result;
+    }
+
     public PartitionBlock getBlockForModule(Module module) {
         return partition.get(module);
     }

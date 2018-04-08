@@ -1,7 +1,6 @@
 package am.aua.placement.objective;
 
 import am.aua.placement.entity.*;
-import am.aua.placement.entity.Module;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +26,7 @@ public class TotalWirelengthObjective implements PlacementObjective {
             List<Point2d> moduleSlots = new ArrayList<>();
 
             for (Module module : modules) {
-                Slot slotForModule = result.get(module);
+                Slot slotForModule = result.getSlotForModule(module);
                 if (slotForModule == null) {
                     throw new ObjectiveCalculationException(String.format("Module with id %d is not placed.", module.getId()));
                 }

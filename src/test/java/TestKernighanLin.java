@@ -36,11 +36,11 @@ public class TestKernighanLin {
 
         Assert.assertEquals(result.getBlocks().size(), 2);
         Assert.assertEquals(result.getModules().size(), 6);
-        Assert.assertEquals(result.getModulesInBlock(firstBlock).contains(Module.withId(1)), true);
-        Assert.assertEquals(result.getModulesInBlock(firstBlock).contains(Module.withId(2)), true);
-        Assert.assertEquals(result.getModulesInBlock(firstBlock).contains(Module.withId(3)), true);
-        Assert.assertEquals(result.getModulesInBlock(secondBlock).contains(Module.withId(4)), true);
-        Assert.assertEquals(result.getModulesInBlock(secondBlock).contains(Module.withId(5)), true);
-        Assert.assertEquals(result.getModulesInBlock(secondBlock).contains(Module.withId(6)), true);
+        Assert.assertTrue(result.getModulesInBlock(firstBlock).contains(Module.withId(1)));
+        Assert.assertTrue(result.getModulesInBlock(firstBlock).contains(Module.withId(2)));
+        Assert.assertTrue(result.getModulesInBlock(firstBlock).contains(Module.withId(3)));
+        Assert.assertTrue(result.getModulesInBlock(secondBlock).contains(Module.withId(4)));
+        Assert.assertTrue(result.getModulesInBlock(secondBlock).contains(Module.withId(5)));
+        Assert.assertTrue(result.getModulesInBlock(secondBlock).contains(Module.withId(6)));
     }
 }

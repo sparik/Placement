@@ -5,61 +5,59 @@ import am.aua.placement.entity.Net;
 import am.aua.placement.partitioning.ModulePartition;
 import am.aua.placement.partitioning.PartitionSolver;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 public class FMPartitionSolver implements PartitionSolver {
-    private List<ModuleFM> block1 = new ArrayList<>(); //TODO remove this
-    private List<ModuleFM> block2 = new ArrayList<>(); //TODO remove this
-    private List<ModuleFM> modules = new ArrayList<>();
-    private List<NetFM> nets = new ArrayList<>(); //TODO
-    private double balanceFactor;
+    private List<Module> modules = new ArrayList<>();
+    private List<Net> nets = new ArrayList<>();
+    private Map<Module, Set<Net>> moduleNetMap;
 
-    public FMPartitionSolver(double balanceFactor) {
-        this.balanceFactor = balanceFactor;
+    public FMPartitionSolver() {
     }
 
-    public FMPartitionSolver(double balanceFactor, Collection<Module> block1, Collection<Module> block2, Collection<Net> nets, Collection<Module> modules) {
-        this(balanceFactor);
-        //TODO add balance check
-        if (block1.size() + block2.size() != modules.size()) {
-            throw new IllegalArgumentException("Sizes of blocks do not add up to the number of modules");
+    // assume equal parts
+
+    @Override
+    public ModulePartition partition(Collection<Module> modules, Collection<Net> nets) {
+        return partition(modules, nets, modules.size() / 2, modules.size() / 2);
+    }
+    // assume random initial partition
+
+    @Override
+    public ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int... partSizes) {
+        if (partSizes.length != 2) {
+            throw new IllegalArgumentException("Only two-way partitioning is implemented.");
         }
-        for (Net net :
-                nets) {
-            NetFM netFM = new NetFM();
-            for (Module module :
-                    net.getModules()) {
-                ModuleFM moduleFM = new ModuleFM(module);
-                if (block1.contains(module)) {
-                    moduleFM.setBlockType(BlockType.BLOCK_1);
-                    this.block1.add(moduleFM);
-                } else {
-                    moduleFM.setBlockType(BlockType.BLOCK_2);
-                    this.block2.add(moduleFM);
-                }
-                moduleFM.getNets().add(netFM);
-                this.modules.add(moduleFM);
-            }
-            this.nets.add(netFM);
+        int totalSize = partSizes[0] + partSizes[1];
+        if (totalSize != modules.size()) {
+            throw new IllegalArgumentException("Number of modules is not equal to the sum of part sizes");
         }
+
+        return partition(ModulePartition.getRandomPartition(modules, partSizes[0]), nets);
     }
 
     @Override
     public ModulePartition partition(ModulePartition initialPartition, Collection<Net> nets) {
+        if (initialPartition.getBlocks().size() != 2) {
+            throw new IllegalArgumentException("Only two-way partitioning is implemented.");
+        }
+        initializeModuleNetMapping(nets);
+
+        this.nets = new ArrayList<>(nets);
+        this.modules = new ArrayList<>(initialPartition.getModules());
+
         return null;
     }
 
-    public ModulePartition partition(Collection<Module> modules, Collection<Net> nets) {
-        //TODO i dont need local modules
-        return partitionFM(this.modules, nets);
-    }
-
-    @Override
-    public ModulePartition partition(Collection<Module> modules, Collection<Net> nets, int... partSizes) {
-        return null;
+    private void initializeModuleNetMapping(Collection<Net> nets) {
+        for (Net net : nets) {
+            for (Module module : net.getModules()) {
+                if (!moduleNetMap.containsKey(module)) {
+                    moduleNetMap.put(module, new HashSet<>());
+                }
+                moduleNetMap.get(module).add(net);
+            }
+        }
     }
 
     private ModulePartition partitionFM(Collection<ModuleFM> modules, Collection<Net> nets) {
@@ -138,6 +136,11 @@ public class FMPartitionSolver implements PartitionSolver {
 //        return counter;
 
         int counter = 0;
+
+        for (Net net :
+                nets) {
+
+        }
         outer:
         for (NetFM netFM :
                 module.getNets()) {
