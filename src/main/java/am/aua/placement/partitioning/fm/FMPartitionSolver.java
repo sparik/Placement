@@ -3,6 +3,7 @@ package am.aua.placement.partitioning.fm;
 import am.aua.placement.entity.Module;
 import am.aua.placement.entity.Net;
 import am.aua.placement.partitioning.ModulePartition;
+import am.aua.placement.partitioning.PartitionBlock;
 import am.aua.placement.partitioning.PartitionSolver;
 
 import java.util.*;
@@ -11,6 +12,14 @@ public class FMPartitionSolver implements PartitionSolver {
     private List<Module> modules = new ArrayList<>();
     private List<Net> nets = new ArrayList<>();
     private Map<Module, Set<Net>> moduleNetMap;
+    private List<Module> lockedModules = new ArrayList<>();
+    private ModulePartition modulePartition;
+    private PartitionBlock fromBlock = PartitionBlock.withId(1);
+    private PartitionBlock toBlock = PartitionBlock.withId(1);
+    private Set<Module> fromBlockSet;
+    private Set<Module> toBlockSet;
+    private PartitionBlock currentBlock;
+
 
     public FMPartitionSolver() {
     }
@@ -42,11 +51,59 @@ public class FMPartitionSolver implements PartitionSolver {
             throw new IllegalArgumentException("Only two-way partitioning is implemented.");
         }
         initializeModuleNetMapping(nets);
+        fromBlock = PartitionBlock.withId(1);
+        toBlock = PartitionBlock.withId(2);
 
+        this.modulePartition = initialPartition;
         this.nets = new ArrayList<>(nets);
         this.modules = new ArrayList<>(initialPartition.getModules());
 
+        //todo loop and set current block
+        //  todo each step has 2 inner steps to keep the balance
+
+        //step 4
+        while (lockedModules.size() < modules.size()) {
+            //step 1
+            Map<Module, Integer> gainMap = mapGainsIfUnlocked(modules);
+            //step 2
+            List<Module> modulesWithGainsSorted = sortByGains(gainMap);
+            Module baseModule = null;
+            for (Module aModuleWithGainsSorted : modulesWithGainsSorted) {
+                if (modulePartition.getBlockForModule(aModuleWithGainsSorted).equals(currentBlock)) {
+                    baseModule = aModuleWithGainsSorted;
+                }
+            }
+
+            if (baseModule == null) {
+                //todo do final checks and go
+            }
+
+            //step 3
+            lockedModules.add(baseModule);
+            changeBlock(baseModule);
+        }
+
         return null;
+    }
+
+    //step 3
+    private void changeBlock(Module module) {
+        int oldId = modulePartition.getBlockForModule(module).getId();
+        int newId = oldId % 2 + 1;
+        PartitionBlock newBlock = PartitionBlock.withId(newId);
+        modulePartition.setBlockForModule(module, newBlock);
+    }
+
+    //step 2.1
+    private List<Module> sortByGains(Map<Module, Integer> gainMap) {
+        List<Map.Entry<Module, Integer>> entryList = new ArrayList<>(gainMap.entrySet());
+        entryList.sort(Comparator.comparing(Map.Entry::getValue));
+
+        List<Module> sortedModules = new ArrayList<>();
+        for (Map.Entry<Module, Integer> entry : entryList) {
+            sortedModules.add(entry.getKey());
+        }
+        return sortedModules;
     }
 
     private void initializeModuleNetMapping(Collection<Net> nets) {
@@ -60,114 +117,46 @@ public class FMPartitionSolver implements PartitionSolver {
         }
     }
 
-    private ModulePartition partitionFM(Collection<ModuleFM> modules, Collection<Net> nets) {
-        initialPartition(modules);
-        while (true) {
-            setGainsIfUnlocked(modules);
-            ModuleFM baseModule = whichMaxGain(modules);
-            //TODO BALANCE CRITERION
-            baseModule.setLocked(true);
-            setGainsIfAffected(baseModule);
-        }
-
-    }
-
-    private void setGainsIfAffected(ModuleFM baseModule) {
-        for (NetFM netFM :
-                baseModule.getNets()) {
-            for (ModuleFM moduleFM :
-                    netFM.getModules()) {
-                if (!moduleFM.isLocked()) {
-                    int gain = getFS(moduleFM) - getTE(moduleFM);
-                    moduleFM.setGain(gain);
-                }
+    //step 1
+    private Map<Module, Integer> mapGainsIfUnlocked(Collection<Module> modules) {
+        Map<Module, Integer> gainMap = new HashMap<>();
+        for (Module module : modules) {
+            Set<Net> nets = moduleNetMap.get(module);
+            if (!lockedModules.contains(module)) {
+                int gain = getFS(module, nets) - getTE(module, nets);
+                gainMap.put(module, gain);
             }
         }
+        return gainMap;
     }
 
-    private void setGainsIfUnlocked(Collection<ModuleFM> modules) {
-        for (ModuleFM module :
-                modules) {
-            if (!module.isLocked()) {
-                int gain = getFS(module) - getTE(module);
-                module.setGain(gain);
-            }
-        }
-    }
-
-    private void initialPartition(Collection<ModuleFM> modules) {
-        while (modules.iterator().hasNext()) {
-
-            modules.iterator().next().setBlockType(BlockType.BLOCK_1);
-            modules.iterator().next().setBlockType(BlockType.BLOCK_2);
-        }
-    }
-
-    private ModuleFM whichMaxGain(Collection<ModuleFM> modules) {
-        ModuleFM maxGainModule = modules.iterator().next();
-        try {
-            while (maxGainModule.isLocked()) {
-                maxGainModule = modules.iterator().next();
-            }
-        } catch (NoSuchElementException e) {
-            return null;
-        }
-        for (ModuleFM module :
-                modules) {
-            if (!module.isLocked() && module.getGain() > maxGainModule.getGain()) {
-                maxGainModule = module; //TODO reference type probs check
-            }
-        }
-        return maxGainModule;
-    }
-
-    private int getFS(ModuleFM module) {
-//        //TODO only BLOCK_1's modules should be scanned
-//        //TODO for that make a module->moduleFM converter
-//        int counter = 0;
-//        for (ModuleFM m :
-//                modules) {
-//            if (m.equals(module)) {
-//                continue;
-//            }
-//            if (m.getBlockType() == BlockType.BLOCK_1 && !Collections.disjoint(m.getNets(), module.getNets()))
-//                counter++;
-//        }
-//        return counter;
-
+    //step 1.1
+    private int getFS(Module module, Set<Net> nets) {
+        PartitionBlock currentBlock = modulePartition.getBlockForModule(module);
         int counter = 0;
-
-        for (Net net :
-                nets) {
-
-        }
         outer:
-        for (NetFM netFM :
-                module.getNets()) {
-            for (ModuleFM m :
-                    netFM.getModules()) {
-                if (m.equals(module) || m.getBlockType() == BlockType.BLOCK_1)
+        for (Net net : nets) {
+            for (Module m : net.getModules()) {
+                if (m.equals(module) || modulePartition.getModulesInBlock(currentBlock).contains(m))
                     continue outer;
-                ++counter;
             }
+            ++counter;
         }
         return counter;
     }
 
-    private int getTE(ModuleFM module) {
+    //step 1.2
+    private int getTE(Module module, Set<Net> nets) {
+        PartitionBlock currentBlock = modulePartition.getBlockForModule(module);
         int counter = 0;
         outer:
-        for (NetFM netFM :
-                module.getNets()) {
-            for (ModuleFM m :
-                    netFM.getModules()) {
-                if (m.getBlockType() == BlockType.BLOCK_2)
+        for (Net net : nets) {
+            for (Module m : net.getModules()) {
+                if (!modulePartition.getModulesInBlock(currentBlock).contains(m))
                     continue outer;
-                ++counter;
             }
+            ++counter;
         }
         return counter;
     }
-
-
 }
