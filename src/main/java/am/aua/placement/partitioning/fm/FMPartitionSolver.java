@@ -10,15 +10,10 @@ import java.util.*;
 
 public class FMPartitionSolver implements PartitionSolver {
     private List<Module> modules = new ArrayList<>();
-    private List<Net> nets = new ArrayList<>();
     private Map<Module, Set<Net>> moduleNetMap;
     private List<Module> lockedModules = new ArrayList<>();
-    private ModulePartition modulePartition;
-    private PartitionBlock fromBlock = PartitionBlock.withId(1);
-    private PartitionBlock toBlock = PartitionBlock.withId(1);
-    private Set<Module> fromBlockSet;
-    private Set<Module> toBlockSet;
-    private PartitionBlock currentBlock;
+    private ModulePartition currentPartition;
+    private Map<Module, Integer> gainMap;
 
 
     public FMPartitionSolver() {
@@ -50,48 +45,53 @@ public class FMPartitionSolver implements PartitionSolver {
         if (initialPartition.getBlocks().size() != 2) {
             throw new IllegalArgumentException("Only two-way partitioning is implemented.");
         }
+
         initializeModuleNetMapping(nets);
-        fromBlock = PartitionBlock.withId(1);
-        toBlock = PartitionBlock.withId(2);
 
-        this.modulePartition = initialPartition;
-        this.nets = new ArrayList<>(nets);
+        this.currentPartition = initialPartition;
         this.modules = new ArrayList<>(initialPartition.getModules());
+        this.moduleNetMap = new HashMap<>();
 
-        //todo loop and set current block
-        //  todo each step has 2 inner steps to keep the balance
-
+        gainMap = mapGainsIfUnlocked(modules);
+        int maxGainSum = gainMap.values().stream().reduce(0, Integer::sum);
+        ModulePartition bestPartition = initialPartition;
         //step 4
         while (lockedModules.size() < modules.size()) {
             //step 1
-            Map<Module, Integer> gainMap = mapGainsIfUnlocked(modules);
-            //step 2
-            List<Module> modulesWithGainsSorted = sortByGains(gainMap);
-            Module baseModule = null;
-            for (Module aModuleWithGainsSorted : modulesWithGainsSorted) {
-                if (modulePartition.getBlockForModule(aModuleWithGainsSorted).equals(currentBlock)) {
-                    baseModule = aModuleWithGainsSorted;
-                }
+            int currentGainSum = moveModuleFromBlock(PartitionBlock.withId(1))
+                    + moveModuleFromBlock(PartitionBlock.withId(2));
+
+            if (currentGainSum > maxGainSum) {
+                bestPartition = currentPartition;
             }
 
-            if (baseModule == null) {
-                //todo do final checks and go
-            }
-
-            //step 3
-            lockedModules.add(baseModule);
-            changeBlock(baseModule);
         }
+        return bestPartition;
+    }
 
-        return null;
+    private int moveModuleFromBlock(PartitionBlock currentBlock) {
+        //step 2
+        List<Module> modulesWithGainsSorted = sortByGains(gainMap);
+        Module baseModule = null;
+        for (Module aModuleWithGainsSorted : modulesWithGainsSorted) {
+            if (currentPartition.getBlockForModule(aModuleWithGainsSorted).equals(currentBlock)) {
+                baseModule = aModuleWithGainsSorted;
+            }
+        }
+        //step 3
+        lockedModules.add(baseModule);
+        changeBlock(baseModule);
+        gainMap = mapGainsIfUnlocked(modules);
+
+        return gainMap.values().stream().reduce(0, Integer::sum);
     }
 
     //step 3
     private void changeBlock(Module module) {
-        int oldId = modulePartition.getBlockForModule(module).getId();
+        int oldId = currentPartition.getBlockForModule(module).getId();
         int newId = oldId % 2 + 1;
         PartitionBlock newBlock = PartitionBlock.withId(newId);
-        modulePartition.setBlockForModule(module, newBlock);
+        currentPartition.setBlockForModule(module, newBlock);
     }
 
     //step 2.1
@@ -132,12 +132,12 @@ public class FMPartitionSolver implements PartitionSolver {
 
     //step 1.1
     private int getFS(Module module, Set<Net> nets) {
-        PartitionBlock currentBlock = modulePartition.getBlockForModule(module);
+        PartitionBlock currentBlock = currentPartition.getBlockForModule(module);
         int counter = 0;
         outer:
         for (Net net : nets) {
             for (Module m : net.getModules()) {
-                if (m.equals(module) || modulePartition.getModulesInBlock(currentBlock).contains(m))
+                if (m.equals(module) || currentPartition.getModulesInBlock(currentBlock).contains(m))
                     continue outer;
             }
             ++counter;
@@ -147,12 +147,12 @@ public class FMPartitionSolver implements PartitionSolver {
 
     //step 1.2
     private int getTE(Module module, Set<Net> nets) {
-        PartitionBlock currentBlock = modulePartition.getBlockForModule(module);
+        PartitionBlock currentBlock = currentPartition.getBlockForModule(module);
         int counter = 0;
         outer:
         for (Net net : nets) {
             for (Module m : net.getModules()) {
-                if (!modulePartition.getModulesInBlock(currentBlock).contains(m))
+                if (!currentPartition.getModulesInBlock(currentBlock).contains(m))
                     continue outer;
             }
             ++counter;
