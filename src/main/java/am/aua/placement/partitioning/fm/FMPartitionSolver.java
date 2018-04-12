@@ -5,6 +5,7 @@ import am.aua.placement.entity.Net;
 import am.aua.placement.partitioning.ModulePartition;
 import am.aua.placement.partitioning.PartitionBlock;
 import am.aua.placement.partitioning.PartitionSolver;
+import com.sun.istack.internal.NotNull;
 
 import java.util.*;
 
@@ -46,11 +47,10 @@ public class FMPartitionSolver implements PartitionSolver {
             throw new IllegalArgumentException("Only two-way partitioning is implemented.");
         }
 
-        initializeModuleNetMapping(nets);
-
         this.currentPartition = initialPartition;
         this.modules = new ArrayList<>(initialPartition.getModules());
         this.moduleNetMap = new HashMap<>();
+        initializeModuleNetMapping(nets);
 
         gainMap = mapGainsIfUnlocked(modules);
         int maxGainSum = gainMap.values().stream().reduce(0, Integer::sum);
@@ -95,7 +95,7 @@ public class FMPartitionSolver implements PartitionSolver {
     }
 
     //step 2.1
-    private List<Module> sortByGains(Map<Module, Integer> gainMap) {
+    private List<Module> sortByGains(@NotNull Map<Module, Integer> gainMap) {
         List<Map.Entry<Module, Integer>> entryList = new ArrayList<>(gainMap.entrySet());
         entryList.sort(Comparator.comparing(Map.Entry::getValue));
 
@@ -106,7 +106,7 @@ public class FMPartitionSolver implements PartitionSolver {
         return sortedModules;
     }
 
-    private void initializeModuleNetMapping(Collection<Net> nets) {
+    private void initializeModuleNetMapping(@NotNull Collection<Net> nets) {
         for (Net net : nets) {
             for (Module module : net.getModules()) {
                 if (!moduleNetMap.containsKey(module)) {
@@ -118,7 +118,7 @@ public class FMPartitionSolver implements PartitionSolver {
     }
 
     //step 1
-    private Map<Module, Integer> mapGainsIfUnlocked(Collection<Module> modules) {
+    private Map<Module, Integer> mapGainsIfUnlocked(@NotNull Collection<Module> modules) {
         Map<Module, Integer> gainMap = new HashMap<>();
         for (Module module : modules) {
             Set<Net> nets = moduleNetMap.get(module);
