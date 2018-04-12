@@ -16,7 +16,6 @@ public class FMPartitionSolver implements PartitionSolver {
     private ModulePartition currentPartition;
     private Map<Module, Integer> gainMap;
 
-
     public FMPartitionSolver() {
     }
 

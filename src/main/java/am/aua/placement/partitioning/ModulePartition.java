@@ -20,17 +20,22 @@ public class ModulePartition {
         ModulePartition result = new ModulePartition();
         PartitionBlock firstPart = PartitionBlock.withId(1);
         PartitionBlock secondPart = PartitionBlock.withId(2);
+        Random random = new Random();
 
-        int idx = 0;
-        for (Module module : modules) {
-            if (idx < firstPartSize) {
-                result.setBlockForModule(module, firstPart);
-            } else {
-                result.setBlockForModule(module, secondPart);
-            }
-            ++idx;
+        Set<Integer> firstPartIndices = new HashSet<>();
+        while (firstPartIndices.size() < firstPartSize) {
+            //0 to modules.size()
+            int index = random.nextInt(modules.size());
+            firstPartIndices.add(index);
         }
 
+        int i = 0;
+        for (Module module : modules) {
+            if (firstPartIndices.contains(i)) {
+                result.setBlockForModule(module, firstPart);
+            } else result.setBlockForModule(module, secondPart);
+            ++i;
+        }
         return result;
     }
 
