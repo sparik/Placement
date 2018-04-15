@@ -14,7 +14,6 @@ public class ModulePartition {
         blocks = new HashMap<>();
     }
 
-    // TODO make random
     // TODO handle more blocks
     public static ModulePartition getRandomPartition(Collection<Module> modules, int firstPartSize) {
         ModulePartition result = new ModulePartition();

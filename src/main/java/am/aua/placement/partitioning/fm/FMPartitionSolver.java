@@ -52,7 +52,7 @@ public class FMPartitionSolver implements PartitionSolver {
         initializeModuleNetMapping(nets);
 
         gainMap = mapGainsIfUnlocked(modules);
-        int maxGainSum = gainMap.values().stream().reduce(0, Integer::sum);
+        int maxGainSum = 0;
         ModulePartition bestPartition = initialPartition;
         //step 4
         while (lockedModules.size() < modules.size()) {
@@ -77,12 +77,13 @@ public class FMPartitionSolver implements PartitionSolver {
                 baseModule = aModuleWithGainsSorted;
             }
         }
+        int baseModuleGain = gainMap.get(baseModule);
         //step 3
         lockedModules.add(baseModule);
         changeBlock(baseModule);
         gainMap = mapGainsIfUnlocked(modules);
 
-        return gainMap.values().stream().reduce(0, Integer::sum);
+        return baseModuleGain;
     }
 
     //step 3
