@@ -82,4 +82,8 @@ public class ModulePartition {
             partition.put(module, block);
         }
     }
+
+    public int getBlockSize(PartitionBlock block){
+        return blocks.get(block).size();
+    }
 }
