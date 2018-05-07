@@ -15,10 +15,10 @@ public class FMPartitionSolver implements PartitionSolver {
     private List<Module> lockedModules;
     private ModulePartition currentPartition;
     private List<Module> movedModules;
-//    private Map<Module, Integer> gainMap;
 
     public FMPartitionSolver() {
     }
+
 
     // assume equal parts
 
@@ -60,11 +60,24 @@ public class FMPartitionSolver implements PartitionSolver {
         //step 4
         while (lockedModules.size() < modules.size()) {
             //step 1
-            currentGainSum += moveBaseModule();
+            Integer moveGain = moveBaseModule();
+            if (moveGain == null)
+                break;
+            currentGainSum += moveGain;
             seed++;
-            currentGainSum += moveBaseModule();
+            moveGain = moveBaseModule();
+            if (moveGain == null) {
+                Module lastModule = movedModules.get(movedModules.size() - 1);
+                movedModules.remove(lastModule);
+                changeBlock(lastModule);
+                break;
+            }
+            currentGainSum += moveGain;
             moves.put(seed++, currentGainSum);
         }
+
+        if (moves.isEmpty())
+            return currentPartition;
 
         int bestSeed = Collections.max(moves.entrySet(), Comparator.comparing(Map.Entry::getValue)).getKey();
         int i = movedModules.size() - 1;
@@ -74,18 +87,23 @@ public class FMPartitionSolver implements PartitionSolver {
         return currentPartition;
     }
 
-    private int moveBaseModule() {
+    private Integer moveBaseModule() {
         Map<Module, Integer> gainMap = mapGainsIfUnlocked();
         Module baseModule = null;
         for (int i = 1; i <= gainMap.size(); i++) {
-            baseModule = getNthBaseModule(i, gainMap);
-            PartitionBlock otherBlock = getOtherBlock(currentPartition.getBlockForModule(baseModule));
+            Module tempBaseModule = getNthBaseModule(i, gainMap);
+            PartitionBlock otherBlock = getOtherBlock(currentPartition.getBlockForModule(tempBaseModule));
             if (satisfiesBalanceCriterion(otherBlock)) {
+                baseModule = tempBaseModule;
                 currentPartition.setBlockForModule(baseModule, otherBlock);
                 lockedModules.add(baseModule);
                 break;
             }
         }
+        if (baseModule == null) {
+            return null;
+        }
+
         movedModules.add(baseModule);
         return gainMap.get(baseModule);
     }
@@ -148,7 +166,7 @@ public class FMPartitionSolver implements PartitionSolver {
     private Map<Module, Integer> mapGainsIfUnlocked() {
         Map<Module, Integer> gainMap = new HashMap<>();
         for (Module module : modules) {
-            Set<Net> nets = moduleNetMap.get(module);
+            Set<Net> nets = moduleNetMap.containsKey(module) ? moduleNetMap.get(module) : new HashSet<>();
             if (!lockedModules.contains(module)) {
                 int gain = getFS(module, nets) - getTE(module, nets);
                 gainMap.put(module, gain);
