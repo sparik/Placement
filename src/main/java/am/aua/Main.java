@@ -12,14 +12,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
 
-        if (args.length < 2) {
-            System.out.printf("Usage: %s input_file output_file", "java -jar place.jar");
+        if (args.length < 3) {
+            System.out.printf("Usage: java -jar %s input_file output_file partitioning_algorithm\n", "place.jar");
             return;
         }
 
@@ -28,13 +26,24 @@ public class Main {
         String input_file_path = args[0];
         String output_file_path = args[1];
 
+        String val = args[2];
+
+        PartitioningAlgorithm algorithm = PartitioningAlgorithm.KERNIGHAN_LIN;
+
+        if (val.equals("fm")) {
+            algorithm = PartitioningAlgorithm.FIDUCCIA_MATTHEYSES;
+        }
+        else if (!val.equals("kl")) {
+            System.out.println("algorithm should be one of 'kl', 'fm'");
+            System.exit(0);
+        }
+
+
         PlacementInput input = PlacementInputReader.read(input_file_path);
 
-        PlacementSolver solver = new PlacementSolverByPartitioning(TotalWirelengthObjective.getInstance(), PartitioningAlgorithm.KERNIGHAN_LIN);
+        PlacementSolver solver = new PlacementSolverByPartitioning(TotalWirelengthObjective.getInstance(), algorithm);
 
         PlacementResult result = solver.solve(input.getModules(), input.getNetList(), input.getHeight(), input.getWidth());
-
-        Path outfile_path = Paths.get(output_file_path);
 
         try {
             writePlacementResultToFile(new PlacementOutput(input.getModules(), result), output_file_path);
