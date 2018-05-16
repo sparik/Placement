@@ -39,7 +39,6 @@ public class Module {
         Module module = (Module) o;
 
         return id == module.id;
-
     }
 
     @Override

@@ -1,51 +1,55 @@
 package am.aua;
 
-import am.aua.placement.PlacementInputReader;
+import am.aua.placement.PlacementOutput;
+import am.aua.placement.PlacementSolver;
+import am.aua.placement.PlacementSolverByPartitioning;
+import am.aua.placement.entity.PlacementResult;
+import am.aua.placement.objective.TotalWirelengthObjective;
+import am.aua.placement.partitioning.PartitioningAlgorithm;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
 
-//        PlacementObjective objective = TotalWirelengthObjective.getInstance();
-//        PartitioningAlgorithm algorithm = PartitioningAlgorithm.FIDUCCIA_MATTHEYSES;
-//
-//        PlacementSolver solver = new PlacementSolverByPartitioning(objective, algorithm);
-//
-//        List<Module> modules = new ArrayList<>();
-//        modules.add(Module.withId(1));
-//        modules.add(Module.withId(2));
-//        modules.add(Module.withId(3));
-//        modules.add(Module.withId(4));
-//
-//        List<Net> nets = new ArrayList<>();
-//        nets.add(new Net(Module.withId(1), Module.withId(3)));
-//        nets.add(new Net(Module.withId(2), Module.withId(4)));
-//
-//        PlacementResult result = solver.solve(modules, nets, 2, 2);
-//        for (Module module : modules) {
-//            System.out.println(result.getSlotForModule(module));
-//        }
-//
-//        ObjectMapper mapper = new ObjectMapper();
-//
-//        try {
-//            PlacementInput input = mapper.readValue("{\n" +
-//                    "\t\"height\" : 2,\n" +
-//                    "\t\"width\" : 2,\n" +
-//                    "\t\"moduleCount\" : 4,\n" +
-//                    "\t\"nets\" : [\n" +
-//                    "\t\t[1, 3],\n" +
-//                    "\t\t[2, 4]\n" +
-//                    "\t]\n" +
-//                    "}", PlacementInput.class);
-//
-//            System.out.println(input);
-//        } catch (IOException ex) {
-//            ex.printStackTrace();
-//        }
+        if (args.length < 2) {
+            System.out.printf("Usage: %s input_file output_file", "java -jar place.jar");
+            return;
+        }
 
-        PlacementInputReader reader = new PlacementInputReader();
-        PlacementInput input = reader.read();
+        // TODO add algorithm as 3rd argument
 
+        String input_file_path = args[0];
+        String output_file_path = args[1];
 
+        PlacementInput input = PlacementInputReader.read(input_file_path);
+
+        PlacementSolver solver = new PlacementSolverByPartitioning(TotalWirelengthObjective.getInstance(), PartitioningAlgorithm.KERNIGHAN_LIN);
+
+        PlacementResult result = solver.solve(input.getModules(), input.getNetList(), input.getHeight(), input.getWidth());
+
+        Path outfile_path = Paths.get(output_file_path);
+
+        try {
+            writePlacementResultToFile(new PlacementOutput(input.getModules(), result), output_file_path);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    private static void writePlacementResultToFile(PlacementOutput output, String filepath) throws IOException {
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        File file = new File(filepath);
+
+        mapper.writeValue(file, output);
     }
 }

@@ -33,7 +33,7 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
     }
 
     public PlacementSolverByPartitioning() {
-        this(TotalWirelengthObjective.getInstance(), PartitioningAlgorithm.KERNIGHAN_LEE);
+        this(TotalWirelengthObjective.getInstance(), PartitioningAlgorithm.KERNIGHAN_LIN);
     }
 
     private static PartitionSolver getPartitionSolverInstance(PartitioningAlgorithm algorithm) {
@@ -41,7 +41,7 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
         PartitionSolver result;
 
         switch (algorithm) {
-            case KERNIGHAN_LEE:
+            case KERNIGHAN_LIN:
                 result = new KLPartitionSolver();
                 break;
             case FIDUCCIA_MATTHEYSES:
@@ -58,7 +58,6 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
     public PlacementResult solve(Collection<Module> modules, Collection<Net> nets, int height, int width) {
 
         // TODO reduce nets or not
-
 
         if (modules.size() != height * width) {
             throw new IllegalArgumentException("vat es ara");
@@ -101,6 +100,4 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
             rec(modulesInSecondPart, nets, placement, lx, ly + w / 2, h, (w + 1) / 2);
         }
     }
-
-
 }

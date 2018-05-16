@@ -37,10 +37,6 @@ public class PlacementInput {
         return moduleCount;
     }
 
-    public int[][] getNets() {
-        return nets;
-    }
-
     public List<Module> getModules() {
         List<Module> modules = new ArrayList<>();
         for (int i = 1; i <= moduleCount; i++) {

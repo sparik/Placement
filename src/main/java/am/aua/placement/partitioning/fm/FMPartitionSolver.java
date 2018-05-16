@@ -5,7 +5,6 @@ import am.aua.placement.entity.Net;
 import am.aua.placement.partitioning.ModulePartition;
 import am.aua.placement.partitioning.PartitionBlock;
 import am.aua.placement.partitioning.PartitionSolver;
-import com.sun.istack.internal.NotNull;
 
 import java.util.*;
 
@@ -151,7 +150,7 @@ public class FMPartitionSolver implements PartitionSolver {
     }
 
 
-    private void initializeModuleNetMapping(@NotNull Collection<Net> nets) {
+    private void initializeModuleNetMapping(Collection<Net> nets) {
         for (Net net : nets) {
             for (Module module : net.getModules()) {
                 if (!moduleNetMap.containsKey(module)) {

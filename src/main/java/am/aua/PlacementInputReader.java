@@ -1,18 +1,19 @@
-package am.aua.placement;
+package am.aua;
 
-import am.aua.PlacementInput;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
 
 public class PlacementInputReader {
-    public PlacementInputReader() {
+
+    private PlacementInputReader() {
+
     }
 
-    public PlacementInput read() {
+    public static PlacementInput read(String path) {
         ObjectMapper mapper = new ObjectMapper();
-        File file = new File("../16_16_256_1000_2.json");
+        File file = new File(path);
         PlacementInput input = null;
         try {
             input = mapper.readValue(file, PlacementInput.class);
