@@ -13,7 +13,9 @@ import am.aua.placement.partitioning.PartitioningAlgorithm;
 import am.aua.placement.partitioning.fm.FMPartitionSolver;
 import am.aua.placement.partitioning.kl.KLPartitionSolver;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by sparik on 2/11/18.
@@ -59,13 +61,30 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
 
         // TODO reduce nets or not
 
-        if (modules.size() != height * width) {
-            throw new IllegalArgumentException("vat es ara");
+        if (modules.size() > height * width) {
+            throw new IllegalArgumentException("Too many modules");
+        }
+
+        List<Module> allModules = new ArrayList<>(modules);
+
+        if (modules.size() < height * width) {
+            int numDummyModules = height * width - modules.size();
+            long maxModuleId = 1;
+            for (Module module : modules) {
+                if (module.getId() > maxModuleId) {
+                    maxModuleId = module.getId();
+                }
+            }
+
+            long dummyModuleId = maxModuleId + 1;
+            while (numDummyModules-- > 0) {
+                allModules.add(Module.withId(dummyModuleId++));
+            }
         }
 
         PlacementResult result = new PlacementResult();
 
-        rec(modules, nets, result, 0, 0, height, width);
+        rec(allModules, nets, result, 0, 0, height, width);
 
         return result;
     }

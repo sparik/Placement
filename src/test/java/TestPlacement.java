@@ -13,41 +13,68 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class TestPlacement {
 
-    // TODO maybe test for all test files
-    private static PlacementInput input;
-    private static List<Module> modules;
-    private static List<Net> nets;
-    private static int height;
-    private static int width;
-    private static int baselineResult;
+    private static final String TEST_FILES_PATH = "test_files";
+    private static ArrayList<PlacementInput> inputs;
+    private static File[] testFiles;
     private static PlacementObjective objective;
+    private static Map<String, Integer> baselineResults;
 
     @BeforeClass
-    public static void setUpBeforeClass() {
-        ClassLoader classLoader = TestPlacement.class.getClassLoader();
-        String testFilePath = classLoader.getResource("16_16_256_250_1.json").getFile();
+    public static void setUpBeforeClass() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-        input = PlacementInputReader.read(testFilePath);
-        modules = input.getModules();
-        nets = input.getNetList();
-        height = input.getHeight();
-        width = input.getWidth();
         objective = TotalWirelengthObjective.getInstance();
+        baselineResults = new HashMap<>();
+        inputs = new ArrayList<>();
 
-        PlacementResult dumbPlacement = new PlacementResult();
+        URL testFilesResourceFolder = classLoader.getResource(TEST_FILES_PATH);
 
-        int moduleId = 0;
-        for (int i = 0; i < height; ++i) {
-            for (int j = 0; j < width; ++j) {
-                dumbPlacement.setSlotForModule(Module.withId(++moduleId), new Slot(i, j));
+        testFiles = (new File(testFilesResourceFolder.getPath())).listFiles();
+
+        for (File testFile : testFiles) {
+
+            PlacementInput input = PlacementInputReader.read(testFile);
+            List<Module> modules = input.getModules();
+            List<Net> nets = input.getNetList();
+            int height = input.getHeight();
+            int width = input.getWidth();
+
+            PlacementResult dumbPlacement = new PlacementResult();
+
+            int idx = 0;
+            long maxModuleId = 1;
+            long dummyModuleIdx = -1;
+            for (int i = 0; i < height; ++i) {
+                for (int j = 0; j < width; ++j) {
+                    if (modules.size() > idx) {
+                        dumbPlacement.setSlotForModule(modules.get(idx++), new Slot(i, j));
+                        if (modules.get(idx - 1).getId() > maxModuleId) {
+                            maxModuleId = modules.get(idx - 1).getId();
+                        }
+                    }
+                    else {
+                        if (dummyModuleIdx == -1) {
+                            dummyModuleIdx = maxModuleId + 1;
+                        }
+                        else {
+                            ++dummyModuleIdx;
+                        }
+                        dumbPlacement.setSlotForModule(Module.withId(dummyModuleIdx), new Slot(i, j));
+                    }
+                }
             }
-        }
 
-        baselineResult = (int) (objective.calculate(nets, dumbPlacement) + 0.5);
+            baselineResults.put(testFile.getName(), (int) (objective.calculate(nets, dumbPlacement) + 0.5));
+            inputs.add(input);
+        }
     }
 
     @Test
@@ -55,13 +82,23 @@ public class TestPlacement {
         PartitioningAlgorithm algorithm = PartitioningAlgorithm.KERNIGHAN_LIN;
 
         PlacementSolver solver = new PlacementSolverByPartitioning(objective, algorithm);
-        PlacementResult placement = solver.solve(modules, nets, height, width);
 
-        int klResult = (int) (objective.calculate(nets, placement) + 0.5);
+        int idx = 0;
 
-        System.out.printf("Kernighan-Lin result : %d, Baseline result : %d\n", klResult, baselineResult);
+        for (PlacementInput input : inputs) {
+            PlacementResult placement = solver.solve(input.getModules(), input.getNetList(), input.getHeight(), input.getWidth());
 
-        Assert.assertTrue(klResult < baselineResult);
+            int klResult = (int) (objective.calculate(input.getNetList(), placement) + 0.5);
+
+            int baselineResult = baselineResults.get(testFiles[idx].getName());
+
+            System.out.printf("Test file: %s, Kernighan-Lin result : %d, Baseline result : %d\n", testFiles[idx].getName(), klResult, baselineResult);
+
+            //Assert.assertTrue(klResult < baselineResult);
+            ++idx;
+        }
+
+
     }
 
     @Test
@@ -69,12 +106,20 @@ public class TestPlacement {
         PartitioningAlgorithm algorithm = PartitioningAlgorithm.FIDUCCIA_MATTHEYSES;
 
         PlacementSolver solver = new PlacementSolverByPartitioning(objective, algorithm);
-        PlacementResult placement = solver.solve(modules, nets, height, width);
 
-        int fmResult = (int) (objective.calculate(nets, placement) + 0.5);
+        int idx = 0;
 
-        System.out.printf("Fiduccia_Mattheyses result : %d, Baseline result : %d\n", fmResult, baselineResult);
+        for (PlacementInput input : inputs) {
+            PlacementResult placement = solver.solve(input.getModules(), input.getNetList(), input.getHeight(), input.getWidth());
 
-        Assert.assertTrue(fmResult < baselineResult);
+            int fmResult = (int) (objective.calculate(input.getNetList(), placement) + 0.5);
+
+            int baselineResult = baselineResults.get(testFiles[idx].getName());
+
+            System.out.printf("Test file: %s, Fiduccia_Mattheyses result : %d, Baseline result : %d\n", testFiles[idx].getName(), fmResult, baselineResult);
+
+            //Assert.assertTrue(fmResult < baselineResult);
+            ++idx;
+        }
     }
 }

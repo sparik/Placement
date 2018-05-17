@@ -11,15 +11,8 @@ public class PlacementInputReader {
 
     }
 
-    public static PlacementInput read(String path) {
+    public static PlacementInput read(File file) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        File file = new File(path);
-        PlacementInput input = null;
-        try {
-            input = mapper.readValue(file, PlacementInput.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return input;
+        return mapper.readValue(file, PlacementInput.class);
     }
 }

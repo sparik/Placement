@@ -21,10 +21,8 @@ public class Main {
             return;
         }
 
-        // TODO add algorithm as 3rd argument
-
-        String input_file_path = args[0];
-        String output_file_path = args[1];
+        String inputFilePath = args[0];
+        String outputFilePath = args[1];
 
         String val = args[2];
 
@@ -39,14 +37,21 @@ public class Main {
         }
 
 
-        PlacementInput input = PlacementInputReader.read(input_file_path);
+        PlacementInput input = null;
+
+        try {
+            input = PlacementInputReader.read(new File(inputFilePath));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            System.exit(1);
+        }
 
         PlacementSolver solver = new PlacementSolverByPartitioning(TotalWirelengthObjective.getInstance(), algorithm);
 
         PlacementResult result = solver.solve(input.getModules(), input.getNetList(), input.getHeight(), input.getWidth());
 
         try {
-            writePlacementResultToFile(new PlacementOutput(input.getModules(), result), output_file_path);
+            writePlacementResultToFile(new PlacementOutput(input.getModules(), result), outputFilePath);
         } catch (IOException ex) {
             ex.printStackTrace();
             System.exit(1);
