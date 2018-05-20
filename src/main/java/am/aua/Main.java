@@ -5,7 +5,10 @@ import am.aua.placement.PlacementSolver;
 import am.aua.placement.PlacementSolverByPartitioning;
 import am.aua.placement.entity.PlacementResult;
 import am.aua.placement.objective.TotalWirelengthObjective;
+import am.aua.placement.partitioning.PartitionSolverFactory;
 import am.aua.placement.partitioning.PartitioningAlgorithm;
+import am.aua.placement.partitioning.fm.FMPartitionSolver;
+import am.aua.placement.partitioning.kl.KLPartitionSolver;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,10 +29,10 @@ public class Main {
 
         String val = args[2];
 
-        PartitioningAlgorithm algorithm = PartitioningAlgorithm.KERNIGHAN_LIN;
+        PartitionSolverFactory partitionSolverFactory = KLPartitionSolver::new;
 
         if (val.equals("fm")) {
-            algorithm = PartitioningAlgorithm.FIDUCCIA_MATTHEYSES;
+            partitionSolverFactory = FMPartitionSolver::new;
         }
         else if (!val.equals("kl")) {
             System.out.println("algorithm should be one of 'kl', 'fm'");
@@ -46,7 +49,7 @@ public class Main {
             System.exit(1);
         }
 
-        PlacementSolver solver = new PlacementSolverByPartitioning(TotalWirelengthObjective.getInstance(), algorithm);
+        PlacementSolver solver = new PlacementSolverByPartitioning(TotalWirelengthObjective.getInstance(), partitionSolverFactory);
 
         PlacementResult result = solver.solve(input.getModules(), input.getNetList(), input.getHeight(), input.getWidth());
 

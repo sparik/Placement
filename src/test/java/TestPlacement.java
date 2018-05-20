@@ -8,7 +8,11 @@ import am.aua.placement.entity.PlacementResult;
 import am.aua.placement.entity.Slot;
 import am.aua.placement.objective.PlacementObjective;
 import am.aua.placement.objective.TotalWirelengthObjective;
+import am.aua.placement.partitioning.PartitionSolver;
+import am.aua.placement.partitioning.PartitionSolverFactory;
 import am.aua.placement.partitioning.PartitioningAlgorithm;
+import am.aua.placement.partitioning.fm.FMPartitionSolver;
+import am.aua.placement.partitioning.kl.KLPartitionSolver;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -79,9 +83,7 @@ public class TestPlacement {
 
     @Test
     public void KL_WIRELENGTH_SUCCESS() {
-        PartitioningAlgorithm algorithm = PartitioningAlgorithm.KERNIGHAN_LIN;
-
-        PlacementSolver solver = new PlacementSolverByPartitioning(objective, algorithm);
+        PlacementSolver solver = new PlacementSolverByPartitioning(objective, KLPartitionSolver::new);
 
         int idx = 0;
 
@@ -97,15 +99,11 @@ public class TestPlacement {
             //Assert.assertTrue(klResult < baselineResult);
             ++idx;
         }
-
-
     }
 
     @Test
     public void FM_WIRELENGTH_SUCCESS() {
-        PartitioningAlgorithm algorithm = PartitioningAlgorithm.FIDUCCIA_MATTHEYSES;
-
-        PlacementSolver solver = new PlacementSolverByPartitioning(objective, algorithm);
+        PlacementSolver solver = new PlacementSolverByPartitioning(objective, FMPartitionSolver::new);
 
         int idx = 0;
 

@@ -3,6 +3,7 @@ import am.aua.placement.entity.Net;
 import am.aua.placement.partitioning.ModulePartition;
 import am.aua.placement.partitioning.PartitionBlock;
 import am.aua.placement.partitioning.PartitionSolver;
+import am.aua.placement.partitioning.fm.FMPartitionSolver;
 import am.aua.placement.partitioning.kl.KLPartitionSolver;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,7 +16,7 @@ import java.util.List;
  */
 public class TestKernighanLin {
 
-    private final PartitionSolver kernighanLin = new KLPartitionSolver();
+    private final PartitionSolver kernighanLin = new FMPartitionSolver();
 
     @Test
     public void testKernighanLinWithInitialPartition() {

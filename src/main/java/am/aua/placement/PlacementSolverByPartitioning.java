@@ -6,16 +6,17 @@ import am.aua.placement.entity.PlacementResult;
 import am.aua.placement.entity.Slot;
 import am.aua.placement.objective.PlacementObjective;
 import am.aua.placement.objective.TotalWirelengthObjective;
-import am.aua.placement.partitioning.ModulePartition;
-import am.aua.placement.partitioning.PartitionBlock;
-import am.aua.placement.partitioning.PartitionSolver;
-import am.aua.placement.partitioning.PartitioningAlgorithm;
+import am.aua.placement.partitioning.*;
 import am.aua.placement.partitioning.fm.FMPartitionSolver;
 import am.aua.placement.partitioning.kl.KLPartitionSolver;
+import sun.misc.ConditionLock;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 /**
  * Created by sparik on 2/11/18.
@@ -23,43 +24,18 @@ import java.util.List;
 public class PlacementSolverByPartitioning implements PlacementSolver {
 
     private PlacementObjective objective;
-    private PartitionSolver partitionSolver;
+    private PartitionSolverFactory partitionSolverFactory;
+    private ExecutorService executor;
+    private PartitioningAlgorithm algorithm;
 
-    public PlacementSolverByPartitioning(PlacementObjective objective, PartitionSolver partitionSolver) {
+    public PlacementSolverByPartitioning(PlacementObjective objective, PartitionSolverFactory partitionSolverFactory) {
         this.objective = objective;
-        this.partitionSolver = partitionSolver;
+        this.partitionSolverFactory = partitionSolverFactory;
+        this.executor = Executors.newCachedThreadPool();
     }
 
-    public PlacementSolverByPartitioning(PlacementObjective objective, PartitioningAlgorithm algorithm) {
-        this(objective, PlacementSolverByPartitioning.getPartitionSolverInstance(algorithm));
-    }
-
-    public PlacementSolverByPartitioning() {
-        this(TotalWirelengthObjective.getInstance(), PartitioningAlgorithm.KERNIGHAN_LIN);
-    }
-
-    private static PartitionSolver getPartitionSolverInstance(PartitioningAlgorithm algorithm) {
-
-        PartitionSolver result;
-
-        switch (algorithm) {
-            case KERNIGHAN_LIN:
-                result = new KLPartitionSolver();
-                break;
-            case FIDUCCIA_MATTHEYSES:
-                result = new FMPartitionSolver();
-                break;
-            default:
-                result = null;
-                break;
-        }
-
-        return result;
-    }
 
     public PlacementResult solve(Collection<Module> modules, Collection<Net> nets, int height, int width) {
-
-        // TODO reduce nets or not
 
         if (modules.size() > height * width) {
             throw new IllegalArgumentException("Too many modules");
@@ -84,7 +60,12 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
 
         PlacementResult result = new PlacementResult();
 
-        rec(allModules, nets, result, 0, 0, height, width);
+        try {
+            this.executor.submit(() -> rec(allModules, nets, result, 0, 0, height, width)).get();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
 
         return result;
     }
@@ -93,7 +74,9 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
     // in placement
     private void rec(Collection<Module> modules, Collection<Net> nets, PlacementResult placement, int lx, int ly, int h, int w) {
         if (modules.size() == 1) {
-            placement.setSlotForModule(modules.iterator().next(), new Slot(lx, ly));
+            synchronized (placement) {
+                placement.setSlotForModule(modules.iterator().next(), new Slot(lx, ly));
+            }
             return;
         }
 
@@ -107,16 +90,25 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
             secondPartSize = ((w + 1) / 2) * h;
         }
 
-        ModulePartition partition = partitionSolver.partition(modules, nets, firstPartSize, secondPartSize);
+        ModulePartition partition = this.partitionSolverFactory.getNewInstance().partition(modules, nets, firstPartSize, secondPartSize);
         Collection<Module> modulesInFirstPart = partition.getModulesInBlock(PartitionBlock.withId(1));
         Collection<Module> modulesInSecondPart = partition.getModulesInBlock(PartitionBlock.withId(2));
 
+        Future<?> task1, task2;
+
         if (h > w) {
-            rec(modulesInFirstPart, nets, placement, lx, ly, h / 2, w);
-            rec(modulesInSecondPart, nets, placement, lx + h / 2, ly, (h + 1) / 2, w);
+            task1 = this.executor.submit(() -> rec(modulesInFirstPart, nets, placement, lx, ly, h / 2, w));
+            task2 = this.executor.submit(() -> rec(modulesInSecondPart, nets, placement, lx + h / 2, ly, (h + 1) / 2, w));
         } else {
-            rec(modulesInFirstPart, nets, placement, lx, ly, h, w / 2);
-            rec(modulesInSecondPart, nets, placement, lx, ly + w / 2, h, (w + 1) / 2);
+            task1 = this.executor.submit(() -> rec(modulesInFirstPart, nets, placement, lx, ly, h, w / 2));
+            task2 = this.executor.submit(() -> rec(modulesInSecondPart, nets, placement, lx, ly + w / 2, h, (w + 1) / 2));
+        }
+
+        try {
+            task1.get();
+            task2.get();
+        } catch (InterruptedException|ExecutionException ex) {
+            ex.printStackTrace();
         }
     }
 }
