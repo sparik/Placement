@@ -227,18 +227,41 @@ public class KLPartitionSolver implements PartitionSolver {
         int maxGain = Integer.MIN_VALUE;
         ModulePair result = new ModulePair();
 
-        for (Module moduleFromFirst : firstPart) {
+        ArrayList<Module> firstPartList = new ArrayList<>();
+        ArrayList<Module> secondPartList = new ArrayList<>();
+        firstPartList.addAll(firstPart);
+        secondPartList.addAll(secondPart);
+
+        Collections.sort(firstPartList, (o1, o2) -> {
+            int i1 = moduleToIdx.get(o1);
+            int i2 = moduleToIdx.get(o2);
+            return dValue(i2) - dValue(i1);
+        });
+
+        Collections.sort(secondPartList, (o1, o2) -> {
+            int i1 = moduleToIdx.get(o1);
+            int i2 = moduleToIdx.get(o2);
+            return dValue(i2) - dValue(i1);
+        });
+
+        for (Module moduleFromFirst : firstPartList) {
             if (lockedModules.contains(moduleFromFirst)) {
                 continue;
             }
 
             int module1Idx = moduleToIdx.get(moduleFromFirst);
-            for (Module moduleFromSecond : secondPart) {
+            for (Module moduleFromSecond : secondPartList) {
                 if (lockedModules.contains(moduleFromSecond)) {
                     continue;
                 }
 
+
                 int module2Idx = moduleToIdx.get(moduleFromSecond);
+
+                if (dValue(module1Idx) + dValue(module2Idx) < maxGain) {
+                    break;
+                }
+
                 int curGain = gainOfInterchange(module1Idx, module2Idx);
                 if (curGain > maxGain) {
                     maxGain = curGain;
