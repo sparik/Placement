@@ -5,28 +5,28 @@ import am.aua.placement.entity.Net;
 import am.aua.placement.entity.PlacementResult;
 import am.aua.placement.entity.Slot;
 import am.aua.placement.objective.PlacementObjective;
-import am.aua.placement.objective.TotalWirelengthObjective;
-import am.aua.placement.partitioning.*;
-import am.aua.placement.partitioning.fm.FMPartitionSolver;
-import am.aua.placement.partitioning.kl.KLPartitionSolver;
-import sun.misc.ConditionLock;
+import am.aua.placement.partitioning.ModulePartition;
+import am.aua.placement.partitioning.PartitionBlock;
+import am.aua.placement.partitioning.PartitionSolverFactory;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Created by sparik on 2/11/18.
  */
 public class PlacementSolverByPartitioning implements PlacementSolver {
 
+    private static final Logger LOGGER = Logger.getLogger(PlacementSolverByPartitioning.class);
     private PlacementObjective objective;
     private PartitionSolverFactory partitionSolverFactory;
     private ExecutorService executor;
-    private PartitioningAlgorithm algorithm;
 
     public PlacementSolverByPartitioning(PlacementObjective objective, PartitionSolverFactory partitionSolverFactory) {
         this.objective = objective;
@@ -62,8 +62,8 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
 
         try {
             this.executor.submit(() -> rec(allModules, nets, result, 0, 0, height, width)).get();
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (ExecutionException | InterruptedException ex) {
+            LOGGER.error(ex.getMessage(), ex);
         }
 
 
@@ -107,8 +107,8 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
         try {
             task1.get();
             task2.get();
-        } catch (InterruptedException|ExecutionException ex) {
-            ex.printStackTrace();
+        } catch (InterruptedException | ExecutionException ex) {
+            LOGGER.error(ex.getMessage(), ex);
         }
     }
 }

@@ -8,24 +8,21 @@ import am.aua.placement.entity.PlacementResult;
 import am.aua.placement.entity.Slot;
 import am.aua.placement.objective.PlacementObjective;
 import am.aua.placement.objective.TotalWirelengthObjective;
-import am.aua.placement.partitioning.PartitionSolver;
-import am.aua.placement.partitioning.PartitionSolverFactory;
-import am.aua.placement.partitioning.PartitioningAlgorithm;
 import am.aua.placement.partitioning.fm.FMPartitionSolver;
 import am.aua.placement.partitioning.kl.KLPartitionSolver;
-import org.junit.Assert;
+import org.apache.log4j.Logger;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class TestPlacement {
 
     private static final String TEST_FILES_PATH = "test_files";
+    private final static Logger LOGGER = Logger.getLogger(TestPlacement.class);
     private static ArrayList<PlacementInput> inputs;
     private static File[] testFiles;
     private static PlacementObjective objective;
@@ -47,6 +44,7 @@ public class TestPlacement {
 
             PlacementInput input = PlacementInputReader.read(testFile);
             List<Module> modules = input.getModules();
+            Collections.shuffle(modules);
             List<Net> nets = input.getNetList();
             int height = input.getHeight();
             int width = input.getWidth();
@@ -63,12 +61,10 @@ public class TestPlacement {
                         if (modules.get(idx - 1).getId() > maxModuleId) {
                             maxModuleId = modules.get(idx - 1).getId();
                         }
-                    }
-                    else {
+                    } else {
                         if (dummyModuleIdx == -1) {
                             dummyModuleIdx = maxModuleId + 1;
-                        }
-                        else {
+                        } else {
                             ++dummyModuleIdx;
                         }
                         dumbPlacement.setSlotForModule(Module.withId(dummyModuleIdx), new Slot(i, j));
@@ -94,7 +90,7 @@ public class TestPlacement {
 
             int baselineResult = baselineResults.get(testFiles[idx].getName());
 
-            System.out.printf("Test file: %s, Kernighan-Lin result : %d, Baseline result : %d\n", testFiles[idx].getName(), klResult, baselineResult);
+            LOGGER.info(String.format("Test file: %s, Kernighan-Lin result : %d, Baseline result : %d\n", testFiles[idx].getName(), klResult, baselineResult));
 
             //Assert.assertTrue(klResult < baselineResult);
             ++idx;
@@ -114,7 +110,7 @@ public class TestPlacement {
 
             int baselineResult = baselineResults.get(testFiles[idx].getName());
 
-            System.out.printf("Test file: %s, Fiduccia_Mattheyses result : %d, Baseline result : %d\n", testFiles[idx].getName(), fmResult, baselineResult);
+            LOGGER.info(String.format("Test file: %s, Fiduccia_Mattheyses result : %d, Baseline result : %d\n", testFiles[idx].getName(), fmResult, baselineResult));
 
             //Assert.assertTrue(fmResult < baselineResult);
             ++idx;

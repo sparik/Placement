@@ -4,7 +4,6 @@ import am.aua.placement.partitioning.ModulePartition;
 import am.aua.placement.partitioning.PartitionBlock;
 import am.aua.placement.partitioning.PartitionSolver;
 import am.aua.placement.partitioning.fm.FMPartitionSolver;
-import am.aua.placement.partitioning.kl.KLPartitionSolver;
 import org.junit.Assert;
 import org.junit.Test;
 
