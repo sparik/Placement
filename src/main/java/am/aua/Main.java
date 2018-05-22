@@ -1,6 +1,5 @@
 package am.aua;
 
-import am.aua.placement.PlacementOutput;
 import am.aua.placement.PlacementSolver;
 import am.aua.placement.PlacementSolverByPartitioning;
 import am.aua.placement.entity.PlacementResult;

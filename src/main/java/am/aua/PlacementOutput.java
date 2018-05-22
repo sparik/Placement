@@ -1,4 +1,4 @@
-package am.aua.placement;
+package am.aua;
 
 import am.aua.placement.entity.Module;
 import am.aua.placement.entity.PlacementResult;
