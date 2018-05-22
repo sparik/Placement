@@ -31,7 +31,6 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
     public PlacementSolverByPartitioning(PlacementObjective objective, PartitionSolverFactory partitionSolverFactory) {
         this.objective = objective;
         this.partitionSolverFactory = partitionSolverFactory;
-        this.executor = Executors.newCachedThreadPool();
     }
 
 
@@ -60,6 +59,7 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
 
         PlacementResult result = new PlacementResult();
 
+        this.executor = Executors.newCachedThreadPool();
         try {
             this.executor.submit(() -> rec(allModules, nets, result, 0, 0, height, width)).get();
             this.executor.shutdown();
