@@ -1,3 +1,5 @@
+package am.aua.placement.objective;
+
 import am.aua.placement.entity.Module;
 import am.aua.placement.entity.Net;
 import am.aua.placement.entity.PlacementResult;

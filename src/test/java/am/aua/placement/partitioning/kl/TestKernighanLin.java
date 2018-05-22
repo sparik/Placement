@@ -1,3 +1,5 @@
+package am.aua.placement.partitioning.kl;
+
 import am.aua.placement.entity.Module;
 import am.aua.placement.entity.Net;
 import am.aua.placement.partitioning.ModulePartition;
@@ -11,13 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by sparik on 5/20/18.
+ * Created by sparik on 4/6/18.
  */
-public class TestFiducciaMattheyses {
-    @Test
-    public void testFMWithInitialPartition() {
-        final PartitionSolver fmSolver = new FMPartitionSolver();
+public class TestKernighanLin {
 
+    private final PartitionSolver kernighanLin = new FMPartitionSolver();
+
+    @Test
+    public void testKernighanLinWithInitialPartition() {
         ModulePartition initialPartition = new ModulePartition();
         PartitionBlock firstBlock = PartitionBlock.withId(1);
         PartitionBlock secondBlock = PartitionBlock.withId(2);
@@ -31,7 +34,7 @@ public class TestFiducciaMattheyses {
         netList.add(new Net(Module.withId(2), Module.withId(4)));
         netList.add(new Net(Module.withId(4), Module.withId(5), Module.withId(6)));
 
-        ModulePartition result = fmSolver.partition(initialPartition, netList);
+        ModulePartition result = kernighanLin.partition(initialPartition, netList);
 
         Assert.assertEquals(result.getBlocks().size(), 2);
         Assert.assertEquals(result.getModules().size(), 6);
