@@ -62,6 +62,7 @@ public class PlacementSolverByPartitioning implements PlacementSolver {
 
         try {
             this.executor.submit(() -> rec(allModules, nets, result, 0, 0, height, width)).get();
+            this.executor.shutdown();
         } catch (ExecutionException | InterruptedException ex) {
             LOGGER.error(ex.getMessage(), ex);
         }
